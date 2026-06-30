@@ -1,0 +1,48 @@
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ===== 虚拟环境 =====
+venv/
+.venv/
+env/
+ENV/
+
+# ===== 真实配置（含 Server酱 SendKey 等密钥，切勿提交）=====
+config.yaml
+*.local.yaml
+
+# ===== 运行产物 =====
+data/
+logs/
+debug/
+user_data/
+.monitor.pid
+*.log
+*.err
+
+# ===== 编辑器 / IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

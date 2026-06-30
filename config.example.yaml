@@ -1,0 +1,58 @@
+# 机票价格监控 示例配置
+# 使用方法：复制为 config.yaml 后按需修改
+#   Copy-Item config.example.yaml config.yaml
+
+# 监控的航线列表（可配置多条）
+routes:
+  - from: SZX
+    from_name: 深圳
+    to: KMG
+    to_name: 昆明
+    dates:
+      - "2026-09-25"
+    alert_threshold: 500        # 低于此价触发提醒（元，0 表示不启用）
+
+  - from: KMG
+    from_name: 昆明
+    to: SZX
+    to_name: 深圳
+    dates:
+      - "2026-10-07"
+    alert_threshold: 1000
+
+# 监控的平台（可选: ctrip, fliggy, tongcheng, qunar, tuniu）
+# fliggy(飞猪) 与 tuniu(途牛) 为纯 httpx 逆向实现，无需浏览器
+platforms:
+  - qunar
+
+# 调度配置
+schedule:
+  interval_minutes: 90        # 基础间隔（分钟）
+  jitter_minutes: 30            # 随机扰动，实际间隔在 [interval-jitter, interval+jitter]
+  run_on_start: true            # 启动时是否立即执行一次
+
+# 爬虫配置
+crawler:
+  headless: false              # 无头模式；首次跑建议 false 以便观察反爬
+  timeout_seconds: 45
+  delay_min: 5                 # 单次请求间随机等待（秒）
+  delay_max: 15
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+  mobile_user_agent: ""        # 留空用内置 iPhone Safari UA
+  debug: true                  # 解析失败时保存截图+HTML 到 debug_dir
+  debug_dir: debug
+  user_data_dir: user_data     # 持久化会话目录（各平台独立子目录）
+
+# 日志 / 存储
+output:
+  db_path: data/prices.db
+  log_path: logs/monitor.log
+
+# 推送配置（低价提醒触发时推送到微信）
+notifier:
+  push_drop_min: 30            # 较上次推送价 降幅 ≥ 此值 才再推
+  push_rise_min: 50            # 涨幅 ≥ 此值 才再推
+  serverchan:
+    enabled: false
+    send_key: ""               # 在 https://sct.ftqq.com/ 注册后填入你的 SendKey
+    channel: ""                # 可选推送通道，多个用 | 分隔
