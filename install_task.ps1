@@ -34,9 +34,10 @@ $script = Join-Path $root "run_monitor.ps1"
 
 function Get-WakeTimerState {
     # Read the "Allow wake timers" power setting (SUB_SLEEP / RTCWAKE). 1 = enabled.
-    # NOTE: powercfg output is LOCALIZED (Chinese Windows says "当前交流电源设置索引"),
-    # so match on the 0x hex values instead of the English labels: the two "Current ... Index"
-    # lines are the last two 0x values in this query, in AC-then-DC order.
+    # NOTE: powercfg output is LOCALIZED (the "Current AC Power Setting Index" label is
+    # translated on non-English Windows), so match on the 0x hex values instead of the
+    # English labels: the two "Current ... Index" lines are the last two 0x values in this
+    # query, in AC-then-DC order.
     $out = & powercfg /query SCHEME_CURRENT SUB_SLEEP RTCWAKE 2>&1 | Out-String
     $hex = [regex]::Matches($out, '0x([0-9a-fA-F]{1,8})') | ForEach-Object { [Convert]::ToInt32($_.Groups[1].Value, 16) }
     if ($hex.Count -ge 2) {
