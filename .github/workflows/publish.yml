@@ -13,6 +13,12 @@ on:
     branches: [main]
     paths:
       - "data/prices.db"
+      # 渲染逻辑或配置一变也应重新发布，否则站点会停留在旧模板
+      - "report.py"
+      - "core/flights.py"
+      - "config.ci.yaml"
+      - "config.w5.yaml"
+      - "scripts/ci_summary.py"
   workflow_dispatch:
 
 permissions:

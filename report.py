@@ -330,30 +330,61 @@ def svg_multi_chart(series: dict, threshold: float = 0, width: int = 1060,
     parts.append('<div class="legend">' + "".join(items) + '</div>')
     return "".join(parts)
 
+def _minutes(t: str) -> int:
+    try:
+        hh, mm = t.split(":")
+        return int(hh) * 60 + int(mm)
+    except Exception:
+        return -1
+
+
+def _plausible_pair(dep: str, arr: str, lo: int = 80, hi: int = 220) -> bool:
+    """起飞/到达是否构成一段合理的航程（默认 1h20m–3h40m）。
+
+    广蓉航段实际约 2h20m。去哪儿的字段拼接会把邻座的起飞时刻串到某一行
+    （例如 MF1192 出现 07:05→22:40，时长 15 小时），用时长区间就能识别出来。
+    """
+    if not dep or not arr:
+        return False
+    d, a = _minutes(dep), _minutes(arr)
+    if d < 0 or a < 0:
+        return False
+    if a < d:
+        a += 24 * 60                      # 跨零点
+    return lo <= (a - d) <= hi
+
+
 def _plausible_times(row: dict) -> bool:
-    """起飞时刻是否自洽（非空，且不晚于到达时刻）。"""
+    """时刻是否自洽：两者都有时要求航程合理；只有一个时无从判断，放行。"""
     d = (row.get("depart_time") or "").strip()
     a = (row.get("arrive_time") or "").strip()
-    return bool(d) and (not a or d < a)
+    if d and a:
+        return _plausible_pair(d, a)
+    return bool(d or a)
 
 
 def _pick_field(group: list, field: str) -> str:
     """从同一班次的若干行里挑一个最可信的字段值。
 
-    去哪儿的字段拼接会让个别行的时刻/机型被邻行内容串到（例如 MF1192 出现 07:05→22:40），
-    所以不能只看"最低价那一条"：这里按出现次数投票取众数，抗单条脏数据。
-    时刻字段另外要求自洽（dep < arr）。
+    时刻字段先用"航程合理"过滤（排除被拼接串到的值），再按出现次数投票取众数；
+    机型/航司等其他字段直接投票。抗单条脏数据。
     """
-    vals = []
-    for r in group:
-        if field == "depart_time" and not _plausible_times(r):
-            continue
-        if field == "aircraft":
-            v = _aircraft_of(r)
-        else:
-            v = (r.get(field) or "").strip()
-        if v:
-            vals.append(v)
+    def collect(rows):
+        vals = []
+        for r in rows:
+            if field == "aircraft":
+                v = _aircraft_of(r)
+            else:
+                v = (r.get(field) or "").strip()
+            if v:
+                vals.append(v)
+        return vals
+
+    if field in ("depart_time", "arrive_time"):
+        good = collect([r for r in group if _plausible_times(r)])
+        if good:
+            return Counter(good).most_common(1)[0][0]
+    vals = collect(group)
     if not vals:
         return ""
     return Counter(vals).most_common(1)[0][0]
@@ -588,6 +619,9 @@ def build_html(cfg: dict, conn, out_path: str) -> str:
                 state.append(_badge("当前最低", "ok"))
             if threshold > 0 and s["current"] is not None and s["current"] <= threshold:
                 state.append(_badge("已低于阈值", "info"))
+            if s["depart_time"] and s["arrive_time"] \
+                    and not _plausible_pair(s["depart_time"], s["arrive_time"]):
+                state.append(_badge("时刻待核实", "warn"))
             trs.append(f"""<tr data-flight="{html.escape(s['flight_no'])}" data-price="{s['current']:.0f}">
       <td class="mono">{html.escape(s['flight_no'])}</td>
       <td>{html.escape(s['airline'])}</td>
