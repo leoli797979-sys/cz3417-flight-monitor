@@ -37,6 +37,7 @@ cloudflare.env
 deploy/
 report.html
 report_preview.png
+.wrangler/
 
 # ===== 运行产物 =====
 data/
