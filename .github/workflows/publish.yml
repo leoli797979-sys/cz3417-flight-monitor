@@ -1,0 +1,63 @@
+name: Publish report to GitHub Pages
+
+# 只负责"渲染 + 发布"，不抓取。
+#
+# 为什么拆开：实测 GitHub Actions 的机房 IP 访问去哪儿会被跳转到登录页
+# （日志：当前页 https://user.qunar.com/mobile/login.jsp），云端抓不到数据。
+# 因此抓取放在本机计划任务里做（本机浏览器会话能过风控），
+# 抓完把 data/prices.db 推上来，由本工作流渲染报告并发布到 Pages。
+#
+# 触发：data/prices.db 有更新时自动跑；也可手动 workflow_dispatch。
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/prices.db"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages-publish
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TZ: Asia/Shanghai
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # report.py 只需要 PyYAML（不碰 playwright / httpx），所以这一步很快
+      - name: Install report dependencies
+        run: python -m pip install --quiet PyYAML
+
+      - name: Build report + static bundle
+        run: python report.py -c config.ci.yaml --deploy-dir deploy
+
+      - name: Summary
+        run: python scripts/ci_summary.py --deploy-dir deploy --summary-out "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: deploy
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

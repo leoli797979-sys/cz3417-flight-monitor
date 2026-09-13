@@ -1,14 +1,21 @@
 name: CZ3417 Flight Price Monitor
 
-# 在 GitHub 云端抓取机票价格并发布报告 —— 本机关机也能持续更新。
-# 免费额度：public 仓库的 Actions 分钟数不限；Pages 托管免费。
+# 定时抓取已停用（保留手动触发做实验）
 #
-# 定时：GitHub cron 用 UTC。下面四条 ≈ 北京时间 09:17 / 13:17 / 17:17 / 21:17。
-# 注意：仓库 60 天无活动时 GitHub 会自动停用定时任务（工作流里有一次数据提交，
-# 通常会刷新活动记录；若发现停用，去 Actions 页点一次 "Enable workflow"）。
+# 原因（实测，非猜测）：GitHub Actions 的机房 IP 访问去哪儿时，页面会被跳转到登录页
+#   [qunar] 90 秒内未拦到 touchInnerList 响应
+#   （当前页 https://user.qunar.com/mobile/login.jsp?ret=...）
+# 即 Bella 指纹握手能过，但航班列表接口因登录墙不返回 → 云端抓不到数据。
+#
+# 现在的分工：
+#   本机计划任务（见 install_task.ps1）负责抓取 → 推送 data/prices.db
+#   → 触发 publish.yml 渲染并发布到 GitHub Pages（电脑关机后页面仍可访问）
+#
+# 想再试云端抓取：用 Actions 页面或 `gh workflow run monitor.yml` 手动触发；
+# 闸门会保证抓不到数据时明确报红、且不覆盖线上好数据。
 on:
-  schedule:
-    - cron: "17 1,5,9,13 * * *"
+  # schedule:
+  #   - cron: "17 1,5,9,13 * * *"
   workflow_dispatch:
     inputs:
       date:

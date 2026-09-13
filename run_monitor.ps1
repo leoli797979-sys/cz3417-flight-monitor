@@ -53,6 +53,33 @@ if (-not $mutex.WaitOne(0)) {
     exit 0
 }
 
+function Publish-Snapshot {
+    # Commit + push data/prices.db. That push triggers publish.yml on GitHub,
+    # which renders the report and deploys it to GitHub Pages.
+    # Best effort: a network problem must never fail the scraping round.
+    $git = (Get-Command git.exe -ErrorAction SilentlyContinue).Source
+    if (-not $git) { Write-Log "git not found - skip publish"; return }
+
+    & $git add -f data/prices.db 2>&1 | Out-Null
+    & $git diff --cached --quiet
+    if ($LASTEXITCODE -eq 0) {
+        Write-Log "no DB change - skip publish"
+        return
+    }
+    $stamp = Get-Date -Format "yyyy-MM-dd HH:mm"
+    & $git -c user.name=cz3417-monitor -c user.email=cz3417-monitor@users.noreply.github.com `
+        commit -q -m ("data: price snapshot " + $stamp) 2>&1 | ForEach-Object { Write-Log ("  " + $_) }
+
+    # Remote may have moved (cloud workflow commits the DB too) - rebase first.
+    & $git pull --rebase --autostash -q mine main 2>&1 | ForEach-Object { Write-Log ("  " + $_) }
+    & $git push -q mine main 2>&1 | ForEach-Object { Write-Log ("  " + $_) }
+    if ($LASTEXITCODE -eq 0) {
+        Write-Log "pushed snapshot - GitHub Pages will republish"
+    } else {
+        Write-Log "push failed (network?) - will retry next round"
+    }
+}
+
 try {
     Write-Log ("===== start round (headless={0}) =====" -f (-not $Show))
     $pyArgs = @("main.py", "--once", "-c", $Config)
@@ -78,6 +105,11 @@ try {
     }
     Remove-Item $tmpOut, $tmpErr -ErrorAction SilentlyContinue
     Write-Log ("===== round done, exit code {0} =====" -f $code)
+
+    # Push the fresh snapshot so the cloud can render + publish it.
+    # Publishing itself is done by .github/workflows/publish.yml (triggered by this push):
+    # cloud-side scraping is impossible because qunar redirects datacenter IPs to a login page.
+    if ($code -eq 0) { Publish-Snapshot }
 }
 catch {
     Write-Log ("FATAL: " + $_.Exception.Message)
