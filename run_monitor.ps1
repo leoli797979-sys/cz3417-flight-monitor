@@ -16,7 +16,10 @@
 param(
     [string]$Config = "config.yaml",
     [switch]$Show,                      # default is headless; -Show pops a browser window
-    [int]$MaxLogKB = 2048
+    [int]$MaxLogKB = 2048,
+    [switch]$SleepAfter,                # put the machine back to sleep when the round is done
+    [int]$IdleMinutes = 10,             # ...but only if nobody has touched the machine for this long
+    [switch]$DryRunSleep                # log the sleep decision without actually sleeping (for testing)
 )
 
 $ErrorActionPreference = "Continue"
@@ -43,6 +46,58 @@ function Write-Log([string]$msg) {
 if ((Test-Path $log) -and ((Get-Item $log).Length -gt ($MaxLogKB * 1KB))) {
     Move-Item -Path $log -Destination "$log.1" -Force
     Write-Log "log rotated to task.log.1"
+}
+
+function Get-IdleMinutes {
+    # How long since the last keyboard/mouse input. -1 means "unknown".
+    if (-not ("IdleTime" -as [type])) {
+        Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public static class IdleTime {
+    [StructLayout(LayoutKind.Sequential)]
+    private struct LASTINPUTINFO { public uint cbSize; public uint dwTime; }
+    [DllImport("user32.dll")] private static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
+    public static double Minutes() {
+        LASTINPUTINFO l = new LASTINPUTINFO();
+        l.cbSize = (uint)Marshal.SizeOf(l);
+        if (!GetLastInputInfo(ref l)) { return -1; }
+        return ((uint)Environment.TickCount - l.dwTime) / 60000.0;
+    }
+}
+"@
+    }
+    return [IdleTime]::Minutes()
+}
+
+function Invoke-IdleSleep {
+    # The scheduled task wakes this machine every N minutes. After the round we sleep again,
+    # otherwise the PC would stay awake until the normal idle timeout.
+    # Safety: never sleep while somebody is using the machine.
+    param([int]$IdleMinutes = 10, [switch]$DryRun)
+
+    $idle = Get-IdleMinutes
+    if ($idle -lt 0) { Write-Log "idle time unavailable - skip sleep"; return }
+    if ($idle -lt $IdleMinutes) {
+        Write-Log ("user is active (idle {0:N1} min < {1} min) - staying awake" -f $idle, $IdleMinutes)
+        return
+    }
+    if ($DryRun) {
+        Write-Log ("DRY-RUN: would sleep now (idle {0:N1} min) - nothing done" -f $idle)
+        return
+    }
+    Write-Log ("idle {0:N1} min - going back to sleep until the next scheduled wake" -f $idle)
+    Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public static class PowerCtl {
+    [DllImport("powrprof.dll", SetLastError=true)]
+    private static extern bool SetSuspendState(bool hibernate, bool forceCritical, bool disableWakeEvent);
+    // disableWakeEvent=false keeps the next wake timer armed
+    public static bool Sleep() { return SetSuspendState(false, false, false); }
+}
+"@
+    [void][PowerCtl]::Sleep()
 }
 
 # Re-entrancy guard: skip this trigger if the previous round is still running.
@@ -110,6 +165,9 @@ try {
     # Publishing itself is done by .github/workflows/publish.yml (triggered by this push):
     # cloud-side scraping is impossible because qunar redirects datacenter IPs to a login page.
     if ($code -eq 0) { Publish-Snapshot }
+
+    # Scheduled runs wake the machine; send it back to sleep when nobody is around.
+    if ($SleepAfter) { Invoke-IdleSleep -IdleMinutes $IdleMinutes -DryRun:$DryRunSleep }
 }
 catch {
     Write-Log ("FATAL: " + $_.Exception.Message)

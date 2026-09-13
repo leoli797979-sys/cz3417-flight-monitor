@@ -233,19 +233,72 @@ GitHub Actions 的机房 IP 访问去哪儿时，页面被**跳转到登录页**
 
 ### 必须说清的边界
 
-* **电脑开机**：每 90 分钟自动抓取并刷新外链，页面持续更新。
-* **电脑关机**：外链**仍然可以打开**（由 GitHub 托管），但显示的是**最后一次的快照**，
-  价格不会更新。要做到"关机期间也持续出最新价格"，需要一台常开设备
-  （VPS / NAS / 树莓派）跑本机那套抓取——因为只有真实浏览器会话能过去哪儿的登录墙。
+* **电脑开机 / 睡眠**：每 90 分钟自动抓取并刷新外链（睡眠时由任务自己唤醒，见下节）。
+* **电脑关机**：外链**仍然可以打开**（由 Cloudflare / GitHub 托管），但显示的是**最后一次的快照**，
+  价格不会更新。这是数据源限制而非配置问题——原因见上面"云端抓取登录墙"。
 * **CI 闸门**：`scripts/ci_gate.py` 保证"抓不到数据就报红且不覆盖线上好数据"。
   这是踩过坑后加的——最初的实现里，云端抓取失败照样变绿，
   然后把仓库里的旧快照重新发布一遍，页面看着正常其实早已停止更新。
 
+### 睡眠 + 定时唤醒（让"没关机只是休眠"也能更新）
+
+计划任务已启用 **WakeToRun**：电脑在睡眠/休眠状态下也会被定时叫醒抓取，
+抓完若无人使用则自动睡回去。验证过的三项前提：
+
+| 前提 | 状态 |
+|---|---|
+| 任务设置 `WakeToRun` | `True` |
+| 电源计划允许唤醒定时器（`SUB_SLEEP` / `RTCWAKE`） | AC=1 DC=1（已启用） |
+| 抓完睡回（仅当空闲 ≥10 分钟） | 已启用（`-SleepAfter -IdleMinutes 10`） |
+
+```powershell
+# 查看状态（含 WakeToRun 与唤醒定时器）
+powershell -ExecutionPolicy Bypass -File .\install_task.ps1 -Status
+# 关掉"抓完睡回"，或改成空闲 30 分钟才睡
+powershell -ExecutionPolicy Bypass -File .\install_task.ps1 -SleepAfterMinutes 0
+powershell -ExecutionPolicy Bypass -File .\install_task.ps1 -SleepAfterMinutes 30
+# 干跑验证睡眠判定（只记日志，不会真的睡）
+powershell -ExecutionPolicy Bypass -File .\run_monitor.ps1 -SleepAfter -IdleMinutes 0 -DryRunSleep
+```
+
+三点注意：
+
+* **只对睡眠/休眠有效**。完全关机（S5）叫不醒——那种场景需要一台常开设备
+  （迷你主机 / 旧笔记本 / NAS / 树莓派），或在云端换数据源（见下）。
+* 若你离开电脑超过 10 分钟且恰好赶上定时任务，它会把机器**睡掉**。
+  如果这会打断你（例如正在后台下载），用 `-SleepAfterMinutes 0` 关掉这个行为。
+* 若发现唤醒了却没更新，先看 `logs/task.log`，再确认唤醒定时器是否仍被允许：
+  `powercfg /query SCHEME_CURRENT SUB_SLEEP RTCWAKE`（某些"节能"软件会把它改回禁用；
+  重新启用需管理员权限：`powercfg /SETACVALUEINDEX SCHEME_CURRENT SUB_SLEEP RTCWAKE 1`）。
+
+### 各数据源在云端的实测结论（决定"关机后能不能更新"）
+
+| 数据源 | 本机（住宅 IP） | 云端（GitHub 机房 IP） | 能给出 CZ3417 吗 |
+|---|---|---|---|
+| 去哪儿 | ✓ 144 架逐航班 | ✗ 被跳转登录页，0 条 | ✓ 但只有本机能 |
+| 途牛 | ✓ ¥399 | ✓ ¥360（**云端可用**） | ✗ 报文里没有 CZ3417（实测 0 次命中） |
+| 同程 | ✓ 仅航线级 | ✓ 仅航线级 | ✗ 连航班号都不给 |
+| 飞猪 / 携程 | ✗ 0 条 | ✗ 0 条 | ✗ |
+
+复现方式：`gh workflow run probe-sources.yml`（配置见 `config.probe.yaml`，只写 `data/probe.db`，不碰正式数据）。
+
+**结论**：关机期间云端能拿到的是"航线级最低价"（途牛/同程），
+拿不到 CZ3417 这一班的精确价格。后者必须由住宅 IP + 真实浏览器会话抓取。
+
 ### Cloudflare 现状
 
-**尚未部署**：本机没有任何 Cloudflare 凭据，`npx wrangler login` 的 OAuth 回调窗口只有约 2 分钟，
-三次尝试均超时。若仍需 Cloudflare Pages：
-在项目根目录建 `cloudflare.env` 写入 `CLOUDFLARE_API_TOKEN`（权限 Account → Cloudflare Pages → Edit）
-与 `CLOUDFLARE_ACCOUNT_ID`，然后 `python publish.py` 即可；
-配好后 `config.yaml` 里把 `publish.enabled` 改成 `true`，每轮抓取会自动重新发布。
-实测本机网络下 `pages.dev` 与 `github.io` **都可达**，所以 Cloudflare 属于"多一个镜像"，非必需。
+**已部署**：https://cz3417-monitor.pages.dev （项目 `cz3417-monitor`，
+账号 leoli797979@gmail.com），每轮抓取后由 `publish.py` 自动重新发布，
+并带发布节流（价格未变时最短间隔 180 分钟、每天最多 12 次）以保护免费版
+500 次/月的额度。
+
+授权要点（踩过坑）：`wrangler login` 走 localhost 回调且只有约 2 分钟窗口，
+**默认浏览器打不开该授权页**，连续三次超时；改用 Firefox 显式打开授权链接后一次成功：
+
+```powershell
+& "C:\Program Files\Mozilla Firefox\firefox.exe" (Get-Content .cf-oauth-url.txt -Raw)
+```
+
+凭据存放于 `%APPDATA%\xdg.config\.wrangler\config\default.toml`。
+若要改用 API Token 方式（无需时间窗口），在 `cloudflare.env` 写入
+`CLOUDFLARE_API_TOKEN`（权限 Account → Cloudflare Pages → Edit）与 `CLOUDFLARE_ACCOUNT_ID` 即可。
