@@ -1,0 +1,55 @@
+name: Probe data sources (cloud feasibility)
+
+# 探测"电脑关机后云端能不能抓取"的边界：
+# 逐个平台试一遍，看哪个源在 GitHub 机房 IP 下还能返回**逐航班**数据。
+#
+# 已知道结论：去哪儿会被跳转登录页（user.qunar.com/mobile/login.jsp），云端拿不到数据。
+# 待验证：飞猪/途牛（纯 httpx 接口逆向，无浏览器指纹）、同程/携程（Playwright 路线）。
+#
+# 只做探测，不发布、不写正式库（config.probe.yaml 用 data/probe.db）。
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      TZ: Asia/Shanghai
+      PYTHONIOENCODING: utf-8
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Probe every data source
+        # 探测必须容错：某个平台炸了不能中断整体探测
+        continue-on-error: true
+        run: python main.py --once --headless -c config.probe.yaml --no-report
+
+      - name: Summarize per-source results
+        if: always()
+        run: python scripts/probe_report.py --db data/probe.db --minutes 30 --flight CZ3417 --summary-out "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload raw responses for inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: probe-debug
+          path: |
+            debug/
+            logs/
+          if-no-files-found: ignore
+          retention-days: 7

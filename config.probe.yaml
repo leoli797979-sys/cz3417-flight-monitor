@@ -1,0 +1,65 @@
+# ==========================================================================
+# 数据源可行性探测配置（供 .github/workflows/probe-sources.yml 使用）
+#
+# 目的：验证"电脑关机后云端能否抓取"这个问题的边界。
+#   - 去哪儿：已证实云端被跳转登录页（user.qunar.com/mobile/login.jsp），不可用
+#   - 飞猪/途牛：纯 httpx 接口逆向，不需要浏览器指纹握手，**有可能**不受登录墙影响
+#   - 同程/携程：Playwright 自动化，与去哪儿同为浏览器路线，待验证
+#
+# 本配置只用于探测，不参与正式发布流程。
+# ==========================================================================
+
+routes:
+  - from: CAN
+    from_name: 广州
+    to: CTU
+    to_name: 成都
+    dates:
+      - "2026-09-22"
+    watch_flights:
+      - CZ3417
+    depart_time_from: "14:00"
+    depart_time_to: "16:30"
+    alert_threshold: 1200
+
+# 一次探测所有源：先跑纯接口的两个，再跑浏览器路线的两个
+platforms:
+  - fliggy
+  - tuniu
+  - tongcheng
+  - ctrip
+
+schedule:
+  interval_minutes: 90
+  jitter_minutes: 30
+  run_on_start: true
+
+crawler:
+  headless: true
+  timeout_seconds: 45
+  response_wait_seconds: 60
+  delay_min: 2
+  delay_max: 5
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+  mobile_user_agent: ""
+  debug: true
+  debug_dir: debug
+  user_data_dir: user_data
+
+output:
+  db_path: data/probe.db        # 单独一个库，别污染正式数据
+  log_path: logs/probe.log
+  report_html: ""
+  report_refresh_seconds: 0
+  deploy_dir: deploy
+
+publish:
+  enabled: false
+
+notifier:
+  push_drop_min: 30
+  push_rise_min: 50
+  serverchan:
+    enabled: false
+    send_key: ""
+    channel: ""
