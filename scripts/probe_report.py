@@ -14,6 +14,8 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="汇总各数据源的探测结果")
@@ -27,13 +29,24 @@ def main() -> int:
         print(f"数据库不存在: {args.db}")
         return 1
 
+    # 用项目自己的存储层初始化一次，触发建表与列迁移（老库缺 route_level 时补列）
+    try:
+        from core.storage import PriceStorage
+        PriceStorage(str(args.db))
+    except Exception as e:
+        print(f"（存储层初始化告警，忽略：{e}）")
+
     cutoff = (datetime.now() - timedelta(minutes=args.minutes)).strftime("%Y-%m-%d %H:%M:%S")
     conn = sqlite3.connect(args.db)
     conn.row_factory = sqlite3.Row
 
+    # 列可能不存在（老库/未迁移），缺失时降级为 0，保证脚本永远能跑
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(flight_prices)")}
+    rl_expr = "route_level" if "route_level" in cols else "0 AS route_level"
+
     rows = conn.execute(
-        "SELECT platform, flight_no, depart_time, arrive_time, price, route_level "
-        "FROM flight_prices WHERE fetched_at >= ?", (cutoff,)
+        "SELECT platform, flight_no, depart_time, arrive_time, price, " + rl_expr +
+        " FROM flight_prices WHERE fetched_at >= ?", (cutoff,)
     ).fetchall()
 
     by_platform: dict = {}
