@@ -25,6 +25,7 @@ from typing import List, Optional
 import httpx
 
 from core.models import FlightPrice
+from core import flights as flights_mod
 from .base import BaseCrawler
 
 
@@ -108,39 +109,78 @@ class QunarCrawler(BaseCrawler):
 
     # ==================== 主流程 ====================
     def fetch(self, from_city: str, to_city: str, dates: List[str]) -> List[FlightPrice]:
+        """逐航班抓取：优先解析出每架航班的价（可据此监控指定航班号）。
+
+        解析降级顺序：
+        1) 逐航班记录（能拿到 flight_no / 起降时刻）→ 每航班一条 FlightPrice
+        2) 只有顶层 minPrice（无航班节点）→ 一条 route_level 记录，
+           表示"全航线当天最低价"，alerter 在指定航班号模式下不会据此告警
+        """
         results: List[FlightPrice] = []
         for date in dates:
             try:
-                price = self._fetch_one(from_city, to_city, date)
+                text = self._fetch_one(from_city, to_city, date)
             except Exception as e:
                 self.logger.exception("[qunar] %s 抓取异常: %s", date, e)
-                price = None
-            if price is not None:
-                results.append(FlightPrice(
-                    platform=self.name,
-                    from_city=from_city, to_city=to_city,
-                    depart_date=date, price=price,
-                ))
-                self.logger.info("[qunar] %s 最低价 ¥%.0f", date, price)
+                text = None
+
+            if not text:
+                self.logger.warning("[qunar] %s 未取到响应", date)
+                self._sleep()
+                continue
+
+            flights = self._extract_qunar_flights(text)
+            if flights:
+                for f in flights:
+                    results.append(FlightPrice(
+                        platform=self.name,
+                        from_city=from_city, to_city=to_city,
+                        depart_date=date, price=f["price"],
+                        airline=f.get("airline", ""),
+                        flight_no=f.get("flight_no", ""),
+                        depart_time=f.get("depart_time", ""),
+                        arrive_time=f.get("arrive_time", ""),
+                        extra=json.dumps(
+                            {k: f.get(k, "") for k in (
+                                "dep_airport", "arr_airport",
+                                "dep_airport_id", "arr_airport_id",
+                                "dep_terminal", "arr_terminal", "aircraft")},
+                            ensure_ascii=False),
+                    ))
+                self.logger.info(
+                    "[qunar] %s 解析到 %d 架航班，最低 ¥%.0f",
+                    date, len(flights), min(f["price"] for f in flights))
             else:
-                self.logger.warning("[qunar] %s 未解析到价格", date)
+                prices = self._extract_qunar_prices(text)
+                if prices:
+                    results.append(FlightPrice(
+                        platform=self.name,
+                        from_city=from_city, to_city=to_city,
+                        depart_date=date, price=float(min(prices)),
+                        route_level=True,
+                    ))
+                    self.logger.warning(
+                        "[qunar] %s 仅解析到全航线最低价 ¥%.0f（无逐航班数据，"
+                        "指定航班号监控本轮不可用）", date, min(prices))
+                else:
+                    self.logger.warning("[qunar] %s 未解析到价格", date)
             self._sleep()
         return results
 
-    def _fetch_one(self, from_city: str, to_city: str, date: str) -> Optional[float]:
-        """单日期抓取：优先 httpx，失败回退浏览器。"""
+    def _fetch_one(self, from_city: str, to_city: str, date: str) -> Optional[str]:
+        """单日期抓取：优先 httpx，失败回退浏览器。返回原始响应文本。"""
         # 1) 优先 httpx（用缓存 token，省浏览器开销）
-        price = self._fetch_via_httpx(from_city, to_city, date)
-        if price is not None:
+        text = self._fetch_via_httpx(from_city, to_city, date)
+        if text:
             self.logger.info("[qunar] httpx 命中，省去浏览器")
-            return price
+            return text
         # 2) httpx 失败（限流/无token/异常）→ 浏览器单条查
         self.logger.info("[qunar] httpx 未命中，回退浏览器")
         return self._fetch_via_browser(from_city, to_city, date)
 
     # ==================== httpx 续航 ====================
-    def _fetch_via_httpx(self, from_city: str, to_city: str, date: str) -> Optional[float]:
-        """用缓存 token 直接 httpx POST，返回价格或 None。"""
+    def _fetch_via_httpx(self, from_city: str, to_city: str, date: str) -> Optional[str]:
+        """用缓存 token 直接 httpx POST，返回原始响应文本或 None。"""
         token = self._load_token()
         if not token:
             return None
@@ -190,12 +230,11 @@ class QunarCrawler(BaseCrawler):
             self.logger.warning("[qunar] httpx 命中风控(1999)，可能是限流或token过期")
             return None
 
-        prices = self._extract_qunar_prices(text)
-        if not prices:
+        # 只判断"有没有可用数据"，具体定价交给 fetch() 的分层解析
+        if not self._extract_qunar_flights(text) and not self._extract_qunar_prices(text):
             self.logger.warning("[qunar] httpx 响应无价格，len=%d", len(text))
             return None
-        self.logger.info("[qunar] httpx 提取价格列表: %s", sorted(set(prices)))
-        return float(min(prices))
+        return text
 
     @staticmethod
     def _is_risk_text(text: str) -> bool:
@@ -211,13 +250,13 @@ class QunarCrawler(BaseCrawler):
         return False
 
     # ==================== 浏览器单条查（兜底 + 刷新 token） ====================
-    def _fetch_via_browser(self, from_city: str, to_city: str, date: str) -> Optional[float]:
-        """浏览器跑一次页面：拦请求刷新 token + 解析响应拿价。
+    def _fetch_via_browser(self, from_city: str, to_city: str, date: str) -> Optional[str]:
+        """浏览器跑一次页面：拦请求刷新 token + 带回原始响应文本。
 
         一次浏览器调用同时完成三件事：
         1. 拦截 touchInnerList 请求，存 token（headers+cookies+body模板含 Bella）
-        2. 拦截响应，解析价格
-        3. 返回价格
+        2. 拦截响应，保存响应文本
+        3. 返回响应文本（价格解析交给 fetch()）
         """
         from_name = self.CITY_NAME.get(from_city.upper(), from_city)
         to_name = self.CITY_NAME.get(to_city.upper(), to_city)
@@ -286,13 +325,10 @@ class QunarCrawler(BaseCrawler):
             self._save_token(snap)
             self.logger.info("[qunar] token 已刷新，有效期 %dh", self.TOKEN_TTL_S // 3600)
 
-        # 解析响应价格
+        # 解析交给 fetch() 的分层解析；这里只负责带回原始响应
         if snap["response_text"]:
             self._dump_raw_text(snap["response_text"], f"browser_{from_name}_{to_name}_{date}")
-            prices = self._extract_qunar_prices(snap["response_text"])
-            if prices:
-                self.logger.info("[qunar] 浏览器提取价格列表: %s", sorted(set(prices)))
-                return float(min(prices))
+            return snap["response_text"]
         return None
 
     # ==================== token 持久化 ====================
@@ -340,6 +376,190 @@ class QunarCrawler(BaseCrawler):
             pass
 
     # ==================== 价格解析 ====================
+    # 去哪儿 data 片段的字段名（2026-09 实测）
+    _RE_BINFO = re.compile(r'"binfo"')
+    _RE_AIRCODE_ARR = re.compile(r'"airCode"\s*:\s*\[([^\]]{0,300})\]')
+    _RE_QUOTED = re.compile(r'"([^"]{2,12})"')
+    _RE_ANY_CODE = re.compile(r'"code"\s*:\s*"')
+    _RE_MINPRICE = re.compile(r'"minPrice"\s*:\s*"?(\d{2,6})')
+    _RE_DEPTIME = re.compile(r'"depTime"\s*:\s*"([0-2]?\d:[0-5]\d)"')
+    _RE_ARRTIME = re.compile(r'"arrTime"\s*:\s*"([0-2]?\d:[0-5]\d)"')
+    _RE_DEPAP = re.compile(r'"depAirport"\s*:\s*"([^"]{1,20})"')
+    _RE_ARRAP = re.compile(r'"arrAirport"\s*:\s*"([^"]{1,20})"')
+    _RE_DEPAPID = re.compile(r'"depAirportId"\s*:\s*"([A-Z]{3})"')
+    _RE_ARRAPID = re.compile(r'"arrAirportId"\s*:\s*"([A-Z]{3})"')
+    _RE_DEPTERM = re.compile(r'"depTerminal"\s*:\s*"([^"]{1,10})"')
+    _RE_ARRTERM = re.compile(r'"arrTerminal"\s*:\s*"([^"]{1,10})"')
+    _RE_NAME = re.compile(r'"name"\s*:\s*\[\s*"([^"]{1,40})"(?:\s*,\s*"([^"]{1,40})")?')
+
+    @classmethod
+    def _parse_flight_objects(cls, text: str) -> list:
+        """从去哪儿"被截断 + 转义 + 拼接混淆"的 data 片段里按航班行抽记录。
+
+        实测响应形态（2026-09）::
+
+            {"ret":"true","msg":"查询成功!","code":"0",
+             "data":"<被截断/交错的 JSON 片段>","t1000":"<混淆 JS>"}
+
+        三个坑，都是实测踩出来的：
+
+        1. ``data`` **不是合法 JSON**：头部被挪进 ``t1000`` 的混淆 JS
+           （``JSON.parse(join('')+...)``）里重建，整串 json.loads 必然失败。
+        2. 同一物理航班会被按**共享航班号**重复列多行（实测 15:15 那班同时存在
+           CZ3417 / 长龙 GJ3029 / 厦航 MF1196 / 吉祥 HO7413 等多行），
+           所以行内的 ``"code"`` 字段经常指向**邻座**航班，不能当航班号用。
+        3. ``extparams`` 等字段被服务端做了拼接混淆（字段名中间会被别的片段
+           截断），不能作为可靠锚点。
+
+        因此这里以 **``binfo.airCode`` 作为行锚点**（它是该行自己的销售航班号），
+        并按 ``"binfo"`` 出现位置切行；价格优先取"本行自己的 code 之后"的
+        ``minPrice``，找不到才退回本行第一个 ``minPrice``。
+        """
+        if not text:
+            return []
+        # 响应里引号被多重转义（\" 甚至 \\"），先归一化
+        s = text.replace('\\\\"', '"').replace('\\"', '"')
+
+        starts = [m.start() for m in cls._RE_BINFO.finditer(s)]
+        if not starts:
+            return []
+
+        collected: list = []
+        for i, b in enumerate(starts):
+            end = starts[i + 1] if i + 1 < len(starts) else min(len(s), b + 12000)
+            block = s[b:end]
+
+            # ---- 航班号：本行自己的 airCode（可能多个，含共享航班号）----
+            codes: list = []
+            arr_hit = cls._RE_AIRCODE_ARR.search(block)
+            if arr_hit:
+                codes = [c for c in cls._RE_QUOTED.findall(arr_hit.group(1))]
+            name_hit = cls._RE_NAME.search(block)
+            if not codes and name_hit:
+                codes = [name_hit.group(1)]
+            fno_list = []
+            for raw in codes:
+                fno = flights_mod.norm_flight_no(raw)
+                if fno and fno not in fno_list:
+                    fno_list.append(fno)
+            if not fno_list:
+                continue
+
+            # ---- 价格：优先本行自己的 code 之后的 minPrice ----
+            price = None
+            for fno in fno_list:
+                m_own = re.search(r'"code"\s*:\s*"%s"' % re.escape(fno), block)
+                if m_own:
+                    tail = block[m_own.end():]
+                    nxt = cls._RE_ANY_CODE.search(tail)
+                    if nxt:
+                        tail = tail[:nxt.start()]
+                    mp = cls._RE_MINPRICE.search(tail)
+                    if mp:
+                        price = float(mp.group(1))
+                        break
+            if price is None:
+                mp = cls._RE_MINPRICE.search(block)
+                if mp:
+                    price = float(mp.group(1))
+            if price is None:
+                continue
+            # 价格合理性：拼接碎片会混进 "53"、"59" 这种两位数字，按统一下限剔掉
+            if not (flights_mod.PRICE_MIN <= price <= flights_mod.PRICE_MAX):
+                continue
+
+            # ---- 时刻 / 机场 / 航司 / 机型 ----
+            def first(rx, src=block):
+                m = rx.search(src)
+                return m.group(1) if m else ""
+
+            airline, aircraft = "", ""
+            if name_hit:
+                raw_name = name_hit.group(1)
+                aircraft = cls._clean_label(name_hit.group(2) or "")
+                airline = re.sub(r"[A-Z0-9]{2}\d{3,4}$", "", raw_name).strip() or raw_name
+                airline = cls._clean_label(airline)
+
+            base = {
+                "depart_time": flights_mod.norm_time(first(cls._RE_DEPTIME)),
+                "arrive_time": flights_mod.norm_time(first(cls._RE_ARRTIME)),
+                "price": price,
+                "airline": airline,
+                "aircraft": aircraft,
+                "dep_airport": first(cls._RE_DEPAP),
+                "arr_airport": first(cls._RE_ARRAP),
+                "dep_airport_id": first(cls._RE_DEPAPID),
+                "arr_airport_id": first(cls._RE_ARRAPID),
+                "dep_terminal": first(cls._RE_DEPTERM),
+                "arr_terminal": first(cls._RE_ARRTERM),
+            }
+            for fno in fno_list:
+                rec = dict(base, flight_no=fno)
+                # 航司名以航班号前缀为准（响应里的 name 字段可能被邻行串到）
+                rec["airline"] = flights_mod.carrier_name(fno) or base["airline"]
+                collected.append(rec)
+
+        return cls._pick_best_per_flight(collected)
+
+    @staticmethod
+    def _clean_label(value: str) -> str:
+        """清掉被拼接污染的标签。
+
+        去哪儿的字段拼接会让 `name[1]` 偶尔变成
+        `ota_sort_family_first_position_ab` 这类开关名，必须剔除，
+        否则机型/航司字段会出现噪声。
+        """
+        v = (value or "").strip()
+        if not v or len(v) > 24:
+            return ""
+        if "_" in v or v.endswith("Ab"):
+            return ""
+        if re.search(r"false|true|_ab|sort|position|switch|show", v, re.I):
+            return ""
+        return v
+
+    @staticmethod
+    def _pick_best_per_flight(rows: list) -> list:
+        """同一航班号可能有多行（含残缺行）：取字段最全的一行，同分取低价。"""
+        fields = ("depart_time", "arrive_time", "dep_airport_id",
+                  "arr_airport_id", "airline", "aircraft")
+
+        def score(r):
+            filled = sum(1 for f in fields if r.get(f))
+            return (filled, -r["price"])
+
+        best: dict = {}
+        for r in rows:
+            cur = best.get(r["flight_no"])
+            if cur is None or score(r) > score(cur):
+                best[r["flight_no"]] = r
+        return list(best.values())
+
+    @staticmethod
+    def _extract_qunar_flights(text: str) -> list:
+        """抽取逐航班记录：先按标准 JSON 试，失败再按去哪儿片段切分。
+
+        返回每项含 flight_no / depart_time / arrive_time / price / airline /
+        dep_airport / arr_airport 等。
+        """
+        if not text:
+            return []
+        # 路线一：如果哪次响应是干净 JSON（字段改名/换接口），走通用解析
+        obj = flights_mod._loads_deep(text)
+        if isinstance(obj, dict):
+            data = obj.get("data")
+            if isinstance(data, str):
+                try:
+                    data = json.loads(data)
+                except Exception:
+                    data = None
+            scope = data if isinstance(data, (dict, list)) else obj
+            recs = flights_mod.extract_records(scope)
+            if recs:
+                return recs
+        # 路线二：去哪儿实际的"截断片段"形态
+        return QunarCrawler._parse_flight_objects(text)
+
     @staticmethod
     def _extract_qunar_prices(text: str) -> list:
         """解析 touchInnerList JSON，提取航班最低价。

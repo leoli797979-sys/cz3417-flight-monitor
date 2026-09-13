@@ -17,6 +17,9 @@ class FlightPrice:
     arrive_time: str = ""   # HH:MM
     fetched_at: str = field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     extra: str = ""         # 备用字段（JSON 字符串等）
+    # True 表示这条记录是"全航线当天最低价"，无法归属到某一架航班。
+    # 配置了 watch_flights 时，这种记录不得触发告警（否则会误报成目标航班）。
+    route_level: bool = False
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -30,3 +33,8 @@ class Route:
     to_name: str
     dates: list
     alert_threshold: float = 0
+    # 只监控这些航班号（空 = 老行为，按全航线最低价告警）
+    watch_flights: list = field(default_factory=list)
+    # 起飞时刻过滤窗口，用于排除同航班号的其它班次/代码共享
+    depart_time_from: str = ""
+    depart_time_to: str = ""

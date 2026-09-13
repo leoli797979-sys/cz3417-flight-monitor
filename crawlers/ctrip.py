@@ -12,6 +12,7 @@ import urllib.parse
 from typing import List
 
 from core.models import FlightPrice
+from core import flights as flights_mod
 from .base import BaseCrawler
 
 
@@ -67,18 +68,47 @@ class CtripCrawler(BaseCrawler):
                             pass
                         page.wait_for_timeout(1200)
 
-                    price = self._pick_lowest(captured)
+                    flights = []
+                    for item in captured:
+                        flights.extend(self._extract_ctrip_flights(item.get("text", "")))
                     self._dump_xhr(captured, f"ctrip_xhr_{date}")
-                    if price is not None:
-                        results.append(FlightPrice(
-                            platform=self.name,
-                            from_city=from_city, to_city=to_city,
-                            depart_date=date, price=price,
-                        ))
-                        self.logger.info("[ctrip] %s 最低价 ¥%.0f", date, price)
+
+                    if flights:
+                        # 按航班号归并（同一航班多条政策 → 取最低有票价）
+                        merged: dict = {}
+                        for f in flights:
+                            old = merged.get(f["flight_no"])
+                            if old is None or f["price"] < old["price"]:
+                                merged[f["flight_no"]] = f
+                        for f in merged.values():
+                            results.append(FlightPrice(
+                                platform=self.name,
+                                from_city=from_city, to_city=to_city,
+                                depart_date=date, price=f["price"],
+                                airline=f.get("airline", ""),
+                                flight_no=f["flight_no"],
+                                depart_time=f.get("depart_time", ""),
+                                arrive_time=f.get("arrive_time", ""),
+                            ))
+                        self.logger.info(
+                            "[ctrip] %s 解析到 %d 架航班，最低 ¥%.0f",
+                            date, len(merged),
+                            min(f["price"] for f in merged.values()))
                     else:
-                        self.logger.warning("[ctrip] %s 未解析到价格", date)
-                        self._debug_snapshot(page, f"nopx_{date}")
+                        price = self._pick_lowest(captured)
+                        if price is not None:
+                            results.append(FlightPrice(
+                                platform=self.name,
+                                from_city=from_city, to_city=to_city,
+                                depart_date=date, price=price,
+                                route_level=True,
+                            ))
+                            self.logger.warning(
+                                "[ctrip] %s 仅解析到全航线最低价 ¥%.0f"
+                                "（无逐航班数据，指定航班号监控本轮不可用）", date, price)
+                        else:
+                            self.logger.warning("[ctrip] %s 未解析到价格", date)
+                            self._debug_snapshot(page, f"nopx_{date}")
                 except Exception as e:
                     self.logger.exception("[ctrip] %s 抓取异常: %s", date, e)
                 self._sleep()
@@ -92,28 +122,14 @@ class CtripCrawler(BaseCrawler):
         return float(min(prices)) if prices else None
 
     @staticmethod
-    def _extract_ctrip_prices(text: str) -> list:
-        """解析携程 flightListSearchForH5 JSON，返回所有"有票"政策的含税价。
+    def _item_prices(item) -> list:
+        """单个 fltitem 内所有"有票"政策的含税价。
 
-        逐航班递归遍历 policyinfo，配对 (tprice, quantity)，
-        quantity 为 null/0 的政策剔除（无票诱饵价）。
+        quantity 为 null/0 的政策是无票诱饵价，必须剔除。
         """
-        if not text:
-            return []
-        try:
-            obj = json.loads(text)
-        except Exception:
-            # 解析失败则退回正则（但仍要求 tprice 与 quantity 在同一对象，尽量配对）
-            return CtripCrawler._regex_fallback(text)
-
-        flts = obj.get("fltitem")
-        if not isinstance(flts, list):
-            return CtripCrawler._regex_fallback(text)
-
         prices: list = []
 
         def scan(node):
-            """递归找 tprice，并取同级 quantity 判断是否有票"""
             if isinstance(node, dict):
                 if "tprice" in node:
                     tp = node.get("tprice")
@@ -136,8 +152,64 @@ class CtripCrawler(BaseCrawler):
                 for v in node:
                     scan(v)
 
+        scan(item)
+        return prices
+
+    @classmethod
+    def _extract_ctrip_flights(cls, text: str) -> list:
+        """抽取逐航班记录：flightListSearchForH5 的 fltitem 每项就是一架航班。"""
+        if not text:
+            return []
+        try:
+            obj = json.loads(text)
+        except Exception:
+            return []
+        flts = obj.get("fltitem")
+        if not isinstance(flts, list):
+            return []
+
+        records: list = []
+        for item in flts:
+            prices = cls._item_prices(item)
+            if not prices:
+                continue
+            fno = flights_mod.find_flight_no(item)
+            if not fno:
+                continue
+            dep, arr = flights_mod.find_times(item)
+            records.append({
+                "flight_no": fno,
+                "depart_time": dep,
+                "arrive_time": arr,
+                "price": float(min(prices)),
+                # 航司名以航班号前缀为准，避免页面标签串行
+                "airline": flights_mod.carrier_name(fno)
+                           or flights_mod.extract_airline(item),
+            })
+        return records
+
+    @staticmethod
+    def _extract_ctrip_prices(text: str) -> list:
+        """解析携程 flightListSearchForH5 JSON，返回所有"有票"政策的含税价。
+
+        逐航班递归遍历 policyinfo，配对 (tprice, quantity)，
+        quantity 为 null/0 的政策剔除（无票诱饵价）。
+        """
+        if not text:
+            return []
+        try:
+            obj = json.loads(text)
+        except Exception:
+            # 解析失败则退回正则（但仍要求 tprice 与 quantity 在同一对象，尽量配对）
+            return CtripCrawler._regex_fallback(text)
+
+        flts = obj.get("fltitem")
+        if not isinstance(flts, list):
+            return CtripCrawler._regex_fallback(text)
+
+        prices: list = []
         for f in flts:
-            scan(f)
+            prices.extend(CtripCrawler._item_prices(f))
         return prices
 
     @staticmethod

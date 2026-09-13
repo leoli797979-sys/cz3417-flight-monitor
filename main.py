@@ -6,6 +6,8 @@
     python main.py -c other.yaml  # 指定配置文件
 """
 import argparse
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -28,21 +30,46 @@ def load_config(path: str) -> dict:
 def build_routes(cfg: dict):
     routes = []
     for r in cfg.get("routes", []):
+        # watch_flights: 只监控这些航班号（空 = 按全航线最低价，老行为）
+        watch = r.get("watch_flights", r.get("flight_no", [])) or []
+        if isinstance(watch, str):
+            watch = [watch]
+        watch = [str(x).strip().upper().replace(" ", "") for x in watch]
+        dates = list(r.get("dates", []))
+
+        # 环境变量覆盖：CI（GitHub Actions）里临时改监控目标不用改文件
+        env_date = (os.environ.get("MONITOR_DATE") or "").strip()
+        if env_date:
+            dates = [env_date]
+        env_flights = (os.environ.get("MONITOR_FLIGHTS") or "").strip()
+        if env_flights:
+            watch = [x.strip().upper().replace(" ", "")
+                     for x in env_flights.split(",") if x.strip()]
+
         routes.append(Route(
             from_code=r["from"],
             from_name=r.get("from_name", r["from"]),
             to_code=r["to"],
             to_name=r.get("to_name", r["to"]),
-            dates=list(r.get("dates", [])),
+            dates=dates,
             alert_threshold=float(r.get("alert_threshold", 0) or 0),
+            watch_flights=[w for w in watch if w],
+            depart_time_from=str(r.get("depart_time_from", "") or ""),
+            depart_time_to=str(r.get("depart_time_to", "") or ""),
         ))
     return routes
 
 
-def make_job(cfg: dict, logger, storage: PriceStorage, alerter: Alerter):
+def make_job(cfg: dict, logger, storage: PriceStorage, alerter: Alerter,
+             config_path: str = "config.yaml"):
     crawler_cfg = cfg.get("crawler", {})
     platforms = cfg.get("platforms", ["ctrip", "fliggy", "tongcheng"])
     routes = build_routes(cfg)
+    out_cfg = cfg.get("output") or {}
+    report_html = out_cfg.get("report_html", "")
+    pub_cfg = cfg.get("publish") or {}
+    publish_enabled = bool(pub_cfg.get("enabled"))
+    project_root = Path(__file__).resolve().parent
 
     crawlers = []
     for name in platforms:
@@ -63,6 +90,32 @@ def make_job(cfg: dict, logger, storage: PriceStorage, alerter: Alerter):
             alerter.check_and_alert(route, all_prices)
         logger.info("===== 本轮抓取结束 =====")
 
+        # 每轮结束后刷新 HTML 报告（定时任务下报告自动保持最新）
+        if report_html:
+            try:
+                from report import build_report
+                path = build_report(storage.db_path, report_html, cfg)
+                logger.info("HTML 报告已刷新: %s", path)
+            except Exception as e:
+                logger.warning("刷新 HTML 报告失败: %s", e)
+
+        # 发布到 Cloudflare Pages：让外部链接始终是最新快照（失败不影响抓取）
+        if publish_enabled:
+            try:
+                proc = subprocess.run(
+                    [sys.executable, "publish.py", "-q", "-c", config_path],
+                    cwd=str(project_root),
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                    text=True, encoding="utf-8", errors="replace", timeout=420)
+                tail = [ln for ln in (proc.stdout or "").strip().splitlines() if ln.strip()]
+                if proc.returncode == 0:
+                    logger.info("已发布到 Cloudflare: %s", tail[-1] if tail else "(无输出)")
+                else:
+                    logger.warning("发布到 Cloudflare 失败(码 %s): %s", proc.returncode,
+                                   tail[-1] if tail else "")
+            except Exception as e:
+                logger.warning("发布到 Cloudflare 异常: %s", e)
+
     return job
 
 
@@ -70,6 +123,9 @@ def main():
     ap = argparse.ArgumentParser(description="机票价格监控工具")
     ap.add_argument("-c", "--config", default="config.yaml", help="配置文件路径")
     ap.add_argument("--once", action="store_true", help="只运行一次后退出")
+    ap.add_argument("--headless", action="store_true",
+                    help="强制无头浏览器（无人值守定时任务用，不弹窗口）")
+    ap.add_argument("--no-report", action="store_true", help="本轮结束后不刷新 HTML 报告")
     ap.add_argument("--login", metavar="PLATFORM",
                     help="登录指定平台(ctrip/fliggy/tongcheng)，弹出可见浏览器，登录完成后回车保存会话")
     args = ap.parse_args()
@@ -79,6 +135,10 @@ def main():
         print(f"配置文件不存在: {cfg_path}", file=sys.stderr)
         sys.exit(1)
     cfg = load_config(str(cfg_path))
+    if args.headless:
+        cfg.setdefault("crawler", {})["headless"] = True
+    if args.no_report:
+        cfg.setdefault("output", {})["report_html"] = ""
 
     out = cfg.get("output", {})
     logger = setup_logger(out.get("log_path", "logs/monitor.log"))
@@ -106,7 +166,7 @@ def main():
         crawler.interactive_login()
         return
 
-    job = make_job(cfg, logger, storage, alerter)
+    job = make_job(cfg, logger, storage, alerter, args.config)
 
     if args.once:
         job()

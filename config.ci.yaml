@@ -1,0 +1,63 @@
+# ==========================================================================
+# GitHub Actions / 云端专用配置（本地 config.yaml 不提交，这份提交）
+#
+# 与 config.yaml 的差异：
+#   - headless: true        CI 里没有桌面会话，必须无头
+#   - report_html 走 report.py 单独生成，故这里 --no-report
+#   - 只留去哪儿一个数据源（携程那条线在本机就没打通，CI 里同样不可靠）
+#   - publish.enabled: false  Actions 由工作流自己发布，不走本机 publish.py
+#
+# 监控目标（2026-09-22 南航 CZ3417 广州白云 T2 → 成都双流 T1 15:15→17:35）
+# 可在工作流里用环境变量临时覆盖：
+#   MONITOR_DATE=2026-09-23  MONITOR_FLIGHTS=CZ3417,3U8732
+# ==========================================================================
+
+routes:
+  - from: CAN
+    from_name: 广州
+    to: CTU
+    to_name: 成都
+    dates:
+      - "2026-09-22"
+    watch_flights:
+      - CZ3417
+    depart_time_from: "14:00"
+    depart_time_to: "16:30"
+    alert_threshold: 1200
+
+platforms:
+  - qunar
+
+schedule:
+  interval_minutes: 90
+  jitter_minutes: 30
+  run_on_start: true
+
+crawler:
+  headless: true
+  timeout_seconds: 45
+  delay_min: 3
+  delay_max: 8
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+  mobile_user_agent: ""
+  debug: true
+  debug_dir: debug
+  user_data_dir: user_data
+
+output:
+  db_path: data/prices.db
+  log_path: logs/monitor.log
+  report_html: ""                   # 由 workflow 里 report.py 生成，避免重复渲染
+  report_refresh_seconds: 300
+  deploy_dir: deploy
+
+publish:
+  enabled: false
+
+notifier:
+  push_drop_min: 30
+  push_rise_min: 50
+  serverchan:
+    enabled: false
+    send_key: ""
+    channel: ""

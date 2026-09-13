@@ -30,6 +30,14 @@ ENV/
 config.yaml
 *.local.yaml
 
+# ===== Cloudflare 发布凭据与产物（cloudflare.env 含 API Token，切勿提交）=====
+cloudflare.env
+.last-publish.json
+.cf-oauth-url.txt
+deploy/
+report.html
+report_preview.png
+
 # ===== 运行产物 =====
 data/
 logs/

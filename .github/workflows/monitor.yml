@@ -1,0 +1,104 @@
+name: CZ3417 Flight Price Monitor
+
+# 在 GitHub 云端抓取机票价格并发布报告 —— 本机关机也能持续更新。
+# 免费额度：public 仓库的 Actions 分钟数不限；Pages 托管免费。
+#
+# 定时：GitHub cron 用 UTC。下面四条 ≈ 北京时间 09:17 / 13:17 / 17:17 / 21:17。
+# 注意：仓库 60 天无活动时 GitHub 会自动停用定时任务（工作流里有一次数据提交，
+# 通常会刷新活动记录；若发现停用，去 Actions 页点一次 "Enable workflow"）。
+on:
+  schedule:
+    - cron: "17 1,5,9,13 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "监控日期 YYYY-MM-DD（留空用 config.ci.yaml 里的值）"
+        required: false
+        default: ""
+      flights:
+        description: "监控航班号，逗号分隔（留空用 config.ci.yaml 里的值）"
+        required: false
+        default: ""
+
+permissions:
+  contents: write      # 把价格历史 DB 提交回仓库（runner 是临时的，不提交就没有走势）
+  pages: write
+  id-token: write
+
+concurrency:
+  group: cz3417-monitor
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PYTHONIOENCODING: utf-8
+      MONITOR_DATE: ${{ github.event.inputs.date }}
+      MONITOR_FLIGHTS: ${{ github.event.inputs.flights }}
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Unit tests (parser / alerter regression)
+        run: python tests/test_flights.py
+
+      - name: Scrape one round
+        run: python main.py --once --headless -c config.ci.yaml --no-report
+
+      - name: Build report + static bundle
+        run: python report.py -c config.ci.yaml --deploy-dir deploy
+
+      - name: Show result summary
+        run: python scripts/ci_summary.py --deploy-dir deploy --summary-out "$GITHUB_STEP_SUMMARY"
+
+      - name: Persist price history (runner is ephemeral)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir -p data
+          git add -f data/prices.db
+          if git diff --cached --quiet; then
+            echo "数据库无变化"
+          else
+            git commit -m "data: CZ3417 price snapshot $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: deploy
+
+      # 可选：如果仓库里配了 CLOUDFLARE_API_TOKEN secret，就同时发布到 Cloudflare Pages，
+      # 让两个链接指向同一份最新数据。没配就自动跳过。
+      - name: Publish to Cloudflare Pages (optional)
+        if: env.CF_TOKEN != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx --yes wrangler pages project create cz3417-monitor --production-branch main || true
+          npx --yes wrangler pages deploy deploy --project-name cz3417-monitor --branch main --commit-dirty=true
+
+  deploy-pages:
+    needs: scrape
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
