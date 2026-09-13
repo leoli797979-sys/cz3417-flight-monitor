@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS flight_prices (
     depart_time TEXT,
     arrive_time TEXT,
     fetched_at  TEXT NOT NULL,
-    extra       TEXT
+    extra       TEXT,
+    -- 1 = 这条只是"全航线当天最低价"，无法归属到某一架航班（读库方也需知道这点）
+    route_level INTEGER DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_route_date
     ON flight_prices (from_city, to_city, depart_date, platform);
@@ -54,17 +56,24 @@ class PriceStorage:
     def _init_schema(self):
         with self._conn() as c:
             c.executescript(SCHEMA)
+            # 迁移：老库没有 route_level 列。CREATE TABLE IF NOT EXISTS 不会补列，
+            # 所以这里显式检查并 ALTER，否则"是否是全航线最低价"这个标志会在落库后丢失。
+            cols = {r["name"] for r in c.execute("PRAGMA table_info(flight_prices)")}
+            if "route_level" not in cols:
+                c.execute("ALTER TABLE flight_prices "
+                          "ADD COLUMN route_level INTEGER DEFAULT 0")
 
     def save(self, fp: FlightPrice):
         with self._conn() as c:
             c.execute(
                 """INSERT INTO flight_prices
                 (platform, from_city, to_city, depart_date, price,
-                 airline, flight_no, depart_time, arrive_time, fetched_at, extra)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                 airline, flight_no, depart_time, arrive_time, fetched_at, extra,
+                 route_level)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (fp.platform, fp.from_city, fp.to_city, fp.depart_date, fp.price,
                  fp.airline, fp.flight_no, fp.depart_time, fp.arrive_time,
-                 fp.fetched_at, fp.extra),
+                 fp.fetched_at, fp.extra, 1 if fp.route_level else 0),
             )
 
     def save_many(self, prices: List[FlightPrice]):
