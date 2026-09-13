@@ -184,3 +184,59 @@ powershell -ExecutionPolicy Bypass -File .\install_task.ps1 -Uninstall          
 | 实测价格变动 | 6 轮样本：`¥510 → ¥510 → ¥510 → ¥510 → ¥510 → ¥470`（当日盘中降 ¥40） |
 
 > 注：`LastTaskResult` 含义 —— `0` 成功，`1` 脚本报错，`267011` 表示尚未运行过。
+
+## 十、外链部署与"关机可访问"的真实边界
+
+### 公开地址（已验证可用）
+
+| 用途 | 地址 |
+|---|---|
+| 报告页面 | https://leoli797979-sys.github.io/cz3417-flight-monitor/ |
+| 摘要（机器可读） | https://leoli797979-sys.github.io/cz3417-flight-monitor/meta.json |
+| 价格历史 | https://leoli797979-sys.github.io/cz3417-flight-monitor/history.json |
+| 最新一轮全部航班 | https://leoli797979-sys.github.io/cz3417-flight-monitor/latest.json |
+
+页面由 **GitHub Pages（Cloudflare 之外的 CDN）** 托管，**电脑关机后照样能打开**——
+访问的是 GitHub 的服务器，与本机无关。页面内含查询框（搜索/排序/过滤），
+JSON 接口则可让外部程序直接查询。
+
+### 架构：本机抓取 + 云端渲染发布
+
+```
+本机计划任务（每90分钟，开机时才跑）
+   └─ 抓取去哪儿 → 写入 SQLite → 刷新本地 report.html
+        └─ 若有新数据：git push data/prices.db
+             └─ GitHub Actions: publish.yml（只渲染，不抓取）
+                  └─ 生成报告 → 部署到 GitHub Pages → 外链更新（约 50 秒）
+```
+
+**为什么云端不自己抓取**（实测结论，不是猜测）：
+
+GitHub Actions 的机房 IP 访问去哪儿时，页面被**跳转到登录页**：
+
+```
+[qunar] 90 秒内未拦到 touchInnerList 响应
+（当前页 https://user.qunar.com/mobile/login.jsp?ret=...）
+```
+
+即 Bella 指纹握手能过，但航班列表接口因登录墙不返回，抓取结果是 0 条。
+因此 `monitor.yml` 的定时抓取已停用（保留 `workflow_dispatch` 供手动实验）。
+
+### 必须说清的边界
+
+* **电脑开机**：每 90 分钟自动抓取并刷新外链，页面持续更新。
+* **电脑关机**：外链**仍然可以打开**（由 GitHub 托管），但显示的是**最后一次的快照**，
+  价格不会更新。要做到"关机期间也持续出最新价格"，需要一台常开设备
+  （VPS / NAS / 树莓派）跑本机那套抓取——因为只有真实浏览器会话能过去哪儿的登录墙。
+* **CI 闸门**：`scripts/ci_gate.py` 保证"抓不到数据就报红且不覆盖线上好数据"。
+  这是踩过坑后加的——最初的实现里，云端抓取失败照样变绿，
+  然后把仓库里的旧快照重新发布一遍，页面看着正常其实早已停止更新。
+
+### Cloudflare 现状
+
+**尚未部署**：本机没有任何 Cloudflare 凭据，`npx wrangler login` 的 OAuth 回调窗口只有约 2 分钟，
+三次尝试均超时。若仍需 Cloudflare Pages：
+在项目根目录建 `cloudflare.env` 写入 `CLOUDFLARE_API_TOKEN`（权限 Account → Cloudflare Pages → Edit）
+与 `CLOUDFLARE_ACCOUNT_ID`，然后 `python publish.py` 即可；
+配好后 `config.yaml` 里把 `publish.enabled` 改成 `true`，每轮抓取会自动重新发布。
+实测本机网络下 `pages.dev` 与 `github.io` **都可达**，所以 Cloudflare 属于"多一个镜像"，非必需。
