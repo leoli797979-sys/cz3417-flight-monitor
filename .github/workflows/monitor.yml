@@ -32,9 +32,12 @@ concurrency:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     env:
       PYTHONIOENCODING: utf-8
+      # runner 默认 UTC。本机写库用的是北京时间，两边时区不一致会让
+      # "取最近一轮" 的字符串比较选错批次，所以统一成 Asia/Shanghai。
+      TZ: Asia/Shanghai
       MONITOR_DATE: ${{ github.event.inputs.date }}
       MONITOR_FLIGHTS: ${{ github.event.inputs.flights }}
       CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -58,11 +61,26 @@ jobs:
       - name: Scrape one round
         run: python main.py --once --headless -c config.ci.yaml --no-report
 
+      # 闸门：抓不到新数据就红，绝不复用旧快照冒充本轮结果
+      - name: Verify fresh data (fail loudly instead of republishing stale data)
+        run: python scripts/ci_gate.py -c config.ci.yaml --minutes 20 --summary-out "$GITHUB_STEP_SUMMARY"
+
       - name: Build report + static bundle
         run: python report.py -c config.ci.yaml --deploy-dir deploy
 
       - name: Show result summary
         run: python scripts/ci_summary.py --deploy-dir deploy --summary-out "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload debug artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scrape-debug
+          path: |
+            debug/
+            logs/
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Persist price history (runner is ephemeral)
         run: |

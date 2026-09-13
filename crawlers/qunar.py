@@ -299,10 +299,12 @@ class QunarCrawler(BaseCrawler):
             page.on("request", on_request)
             page.on("response", on_response)
 
+            wait_s = int(self.config.get("response_wait_seconds", 60) or 60)
             try:
                 page.goto(url, wait_until="load")
-                # 轮询等待请求+响应都拿到
-                for _ in range(12):
+                # 轮询等待响应。注意：CI 冷启动（无 GPU、冷缓存）明显比本机慢，
+                # 实测 GitHub Actions 上 24 秒的窗口拿不到响应，所以窗口可配且默认放大。
+                for _ in range(max(1, wait_s // 2)):
                     page.wait_for_timeout(2000)
                     try:
                         page.mouse.wheel(0, 1500)
@@ -310,6 +312,14 @@ class QunarCrawler(BaseCrawler):
                         pass
                     if snap["response_text"] is not None:
                         break
+                if snap["response_text"] is None:
+                    try:
+                        self.logger.warning(
+                            "[qunar] %d 秒内未拦到 touchInnerList 响应（当前页 %s / 标题 %s）",
+                            wait_s, page.url, page.title())
+                    except Exception:
+                        pass
+                    self._debug_snapshot(page, f"noresponse_{date}")
             except Exception as e:
                 self.logger.warning("[qunar] 浏览器页面异常: %s", e)
 
