@@ -108,11 +108,13 @@ def make_job(cfg: dict, logger, storage: PriceStorage, alerter: Alerter,
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                     text=True, encoding="utf-8", errors="replace", timeout=420)
                 tail = [ln for ln in (proc.stdout or "").strip().splitlines() if ln.strip()]
+                # publish.py 的结论行不带缩进，取它比取最后一行更清楚
+                summary = next((ln for ln in reversed(tail) if not ln.startswith("  ")),
+                               tail[-1] if tail else "")
                 if proc.returncode == 0:
-                    logger.info("已发布到 Cloudflare: %s", tail[-1] if tail else "(无输出)")
+                    logger.info("Cloudflare 发布: %s", summary)
                 else:
-                    logger.warning("发布到 Cloudflare 失败(码 %s): %s", proc.returncode,
-                                   tail[-1] if tail else "")
+                    logger.warning("发布到 Cloudflare 失败(码 %s): %s", proc.returncode, summary)
             except Exception as e:
                 logger.warning("发布到 Cloudflare 异常: %s", e)
 

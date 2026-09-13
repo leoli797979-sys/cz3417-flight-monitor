@@ -187,27 +187,36 @@ powershell -ExecutionPolicy Bypass -File .\install_task.ps1 -Uninstall          
 
 ## 十、外链部署与"关机可访问"的真实边界
 
-### 公开地址（已验证可用）
+### 公开地址（均已验证可用）
 
-| 用途 | 地址 |
-|---|---|
-| 报告页面 | https://leoli797979-sys.github.io/cz3417-flight-monitor/ |
-| 摘要（机器可读） | https://leoli797979-sys.github.io/cz3417-flight-monitor/meta.json |
-| 价格历史 | https://leoli797979-sys.github.io/cz3417-flight-monitor/history.json |
-| 最新一轮全部航班 | https://leoli797979-sys.github.io/cz3417-flight-monitor/latest.json |
+| 用途 | Cloudflare Pages（主） | GitHub Pages（备） |
+|---|---|---|
+| 报告页面 | https://cz3417-monitor.pages.dev/ | https://leoli797979-sys.github.io/cz3417-flight-monitor/ |
+| 摘要 | `/meta.json` | 同路径 |
+| 价格历史 | `/history.json` | 同路径 |
+| 最新一轮全部航班 | `/latest.json` | 同路径 |
 
-页面由 **GitHub Pages（Cloudflare 之外的 CDN）** 托管，**电脑关机后照样能打开**——
-访问的是 GitHub 的服务器，与本机无关。页面内含查询框（搜索/排序/过滤），
-JSON 接口则可让外部程序直接查询。
+两个地址都是**电脑关机后照样能打开**的（页面托管在 Cloudflare / GitHub 的服务器上，与本机无关）。
+页面内含查询框（搜索/排序/过滤），JSON 接口供外部程序查询。
 
-### 架构：本机抓取 + 云端渲染发布
+* **Cloudflare Pages**：由本机每轮抓取后自动重新发布（`config.yaml` 里 `publish.enabled: true`），
+  `Cache-Control: public, max-age=60`，所以更新后约 1 分钟内可见。
+* **GitHub Pages**：本机推送 `data/prices.db` 后由 `publish.yml` 自动渲染发布。
+
+> 授权踩坑记录：Cloudflare 的 `wrangler login` 走 localhost 回调且只给约 2 分钟窗口。
+> 本机**默认浏览器无法正常打开该授权页**，导致连续三次超时；
+> 改用 Firefox 显式打开授权链接后一次成功（`firefox.exe "<授权URL>"`）。
+> 凭据存放在 `%APPDATA%\xdg.config\.wrangler\config\default.toml`。
+
+### 架构：本机抓取 + 双通道发布
 
 ```
 本机计划任务（每90分钟，开机时才跑）
    └─ 抓取去哪儿 → 写入 SQLite → 刷新本地 report.html
+        ├─ 自动发布到 Cloudflare Pages（publish.py，约 10 秒）→ cz3417-monitor.pages.dev 更新
         └─ 若有新数据：git push data/prices.db
              └─ GitHub Actions: publish.yml（只渲染，不抓取）
-                  └─ 生成报告 → 部署到 GitHub Pages → 外链更新（约 50 秒）
+                  └─ 部署到 GitHub Pages → 备站更新（约 50 秒）
 ```
 
 **为什么云端不自己抓取**（实测结论，不是猜测）：

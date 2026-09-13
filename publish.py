@@ -109,6 +109,57 @@ def run(cmd: list, cwd: Path, env: dict, quiet: bool = False):
     return proc.returncode, proc.stdout or ""
 
 
+def load_last_publish() -> dict:
+    try:
+        return json.loads(LAST_PUBLISH.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def should_skip_publish(deploy_dir: Path, min_interval_minutes: int,
+                        max_per_day: int) -> tuple:
+    """发布节流：避免把 Cloudflare Pages 的免费额度耗光。
+
+    Cloudflare Pages 免费版每月 500 次部署。定时任务每 90 分钟一轮、
+    电脑常开时约 480 次/月，加随机抖动就会超限。因此：
+      * 价格没变且距上次发布不足 min_interval_minutes → 跳过
+      * 当天发布次数已达 max_per_day → 跳过
+    价格一旦变化则立即发布（这才是用户真正关心的）。
+    返回 (是否跳过, 原因)。
+    """
+    rec = load_last_publish()
+    try:
+        meta = json.loads((deploy_dir / "meta.json").read_text(encoding="utf-8"))
+    except Exception:
+        return False, ""
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    times = [t for t in (rec.get("publish_times") or []) if str(t).startswith(today)]
+    if max_per_day > 0 and len(times) >= max_per_day:
+        return True, f"今日已发布 {len(times)} 次，达到上限 {max_per_day}"
+
+    last_at = rec.get("published_at")
+    last_price = (rec.get("meta") or {}).get("current_price")
+    if last_at and last_price is not None:
+        try:
+            elapsed = (datetime.now() - datetime.strptime(last_at, "%Y-%m-%d %H:%M:%S")
+                       ).total_seconds() / 60
+        except Exception:
+            elapsed = 1e9
+        if meta.get("current_price") == last_price and elapsed < min_interval_minutes:
+            return True, (f"价格未变(¥{last_price})且距上次发布仅 {elapsed:.0f} 分钟"
+                          f"（间隔阈值 {min_interval_minutes} 分钟）")
+    return False, ""
+
+
+def record_publish(record: dict):
+    old = load_last_publish()
+    times = list(old.get("publish_times") or [])
+    times.append(record["published_at"])
+    record["publish_times"] = times[-40:]
+    LAST_PUBLISH.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="发布报告到 Cloudflare Pages")
     ap.add_argument("-c", "--config", default="config.yaml")
@@ -116,6 +167,11 @@ def main() -> int:
     ap.add_argument("--dir", default="", help="部署目录（默认取配置 publish.deploy_dir）")
     ap.add_argument("--no-build", action="store_true", help="跳过重新生成部署包")
     ap.add_argument("--dry-run", action="store_true", help="只生成部署包，不上传")
+    ap.add_argument("--min-interval-minutes", type=int, default=-1,
+                    help="价格未变时的最小发布间隔（分钟），默认取配置，兜底 180")
+    ap.add_argument("--max-per-day", type=int, default=-1,
+                    help="每天最多发布几次，默认取配置，兜底 12")
+    ap.add_argument("--force", action="store_true", help="忽略节流，强制发布")
     ap.add_argument("-q", "--quiet", action="store_true")
     args = ap.parse_args()
 
@@ -154,6 +210,20 @@ def main() -> int:
         print("\n--dry-run：已生成部署包，未上传。")
         print(f"预览方式：直接打开 {deploy_dir / 'index.html'}")
         return 0
+
+    # ---- 1.5) 发布节流（保护 Cloudflare Pages 免费额度）----
+    min_interval = args.min_interval_minutes
+    if min_interval < 0:
+        min_interval = int(pub.get("min_interval_minutes", 180) or 180)
+    max_per_day = args.max_per_day
+    if max_per_day < 0:
+        max_per_day = int(pub.get("max_per_day", 12) or 12)
+    if not args.force:
+        skip, why = should_skip_publish(deploy_dir, min_interval, max_per_day)
+        if skip:
+            print(f"跳过发布（节流）：{why}")
+            print("  需要强制发布可加 --force")
+            return 0
 
     # ---- 2) 凭据与工具检查 ----
     creds = load_credentials()
@@ -215,7 +285,7 @@ def main() -> int:
         record["meta"] = meta
     except Exception:
         pass
-    LAST_PUBLISH.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+    record_publish(record)
 
     print(f"\n发布成功：{url}")
     print(f"  - 页面      : {url}/")
