@@ -1,0 +1,76 @@
+# ==========================================================================
+# 「广州 → 成都 晚间班次」监控配置（独立页面，不含 CZ3417）
+#
+# 监控 5 个班次（2026-09-22 广州白云 → 成都双流）：
+#   3U8736  川航  20:30 → 23:00
+#   3U1149  川航  20:15 → 22:40
+#   MF1192  厦航  20:15 → 22:40
+#   CZ3413  南航  20:15 → 22:40
+#   CZ9088  南航  20:30 → 23:00
+#
+# 说明：
+#   * 抓取与 CZ3417 页面**共用同一次抓取**（抓的是整条航线，本来就含这些班次），
+#     所以这里只需要"渲染 + 发布"，不需要额外爬取、也不额外消耗接口配额。
+#   * 因此本配置的 publish.enabled 保持 false，由 run_monitor.ps1 / publish.py 显式调用。
+#   * 时间窗留空：按航班号精确匹配，不需要再用时刻过滤（原来 14:00-16:30 的窗口会把这些晚间班全过滤掉）。
+# ==========================================================================
+
+routes:
+  - from: CAN
+    from_name: 广州
+    to: CTU
+    to_name: 成都
+    dates:
+      - "2026-09-22"
+    watch_flights:
+      - 3U8736
+      - 3U1149
+      - MF1192
+      - CZ3413
+      - CZ9088
+    depart_time_from: ""
+    depart_time_to: ""
+    # 这几班现价 ¥580–770，低于 550 才算"真便宜"
+    alert_threshold: 550
+
+platforms:
+  - qunar
+
+schedule:
+  interval_minutes: 90
+  jitter_minutes: 30
+  run_on_start: true
+
+crawler:
+  headless: true
+  timeout_seconds: 45
+  response_wait_seconds: 60
+  delay_min: 5
+  delay_max: 15
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+  mobile_user_agent: ""
+  debug: true
+  debug_dir: debug
+  user_data_dir: user_data
+
+output:
+  db_path: data/prices.db           # 与 CZ3417 页面共用同一个价格库
+  log_path: logs/monitor.log
+  report_html: report-w5.html       # 新页面（本机文件）
+  report_refresh_seconds: 300
+  deploy_dir: deploy-w5             # 新页面的静态部署包
+
+publish:
+  enabled: false                    # 由 publish.py -c config.w5.yaml 显式发布
+  provider: cloudflare-pages
+  project: can-ctu-evening          # -> https://can-ctu-evening.pages.dev
+  min_interval_minutes: 180
+  max_per_day: 12
+
+notifier:
+  push_drop_min: 30
+  push_rise_min: 50
+  serverchan:
+    enabled: false
+    send_key: ""
+    channel: ""

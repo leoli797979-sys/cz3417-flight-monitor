@@ -33,9 +33,12 @@ config.yaml
 # ===== Cloudflare 发布凭据与产物（cloudflare.env 含 API Token，切勿提交）=====
 cloudflare.env
 .last-publish.json
+.last-publish.*.json
 .cf-oauth-url.txt
 deploy/
+deploy-w5/
 report.html
+report-w5.html
 report_preview.png
 .wrangler/
 

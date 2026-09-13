@@ -42,11 +42,19 @@ jobs:
       - name: Install report dependencies
         run: python -m pip install --quiet PyYAML
 
-      - name: Build report + static bundle
+      - name: Build CZ3417 page (site root)
         run: python report.py -c config.ci.yaml --deploy-dir deploy
 
+      # 晚间 5 班页面作为子站点发布到 /w5/（同一份价格库，只是不同的监控班次与版面）
+      - name: Build evening-flights page (/w5/)
+        run: python report.py -c config.w5.yaml --deploy-dir deploy/w5
+
       - name: Summary
-        run: python scripts/ci_summary.py --deploy-dir deploy --summary-out "$GITHUB_STEP_SUMMARY"
+        run: |
+          python scripts/ci_summary.py --deploy-dir deploy --summary-out "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### 晚间 5 班页面（/w5/）" >> "$GITHUB_STEP_SUMMARY"
+          python scripts/ci_summary.py --deploy-dir deploy/w5 --summary-out "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-pages-artifact@v3
         with:

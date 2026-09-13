@@ -47,8 +47,17 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent
 ENV_FILE = ROOT / "cloudflare.env"
-LAST_PUBLISH = ROOT / ".last-publish.json"
 URL_RE = re.compile(r"https://[a-z0-9][a-z0-9-]*\.pages\.dev\S*")
+
+
+def state_file(project: str) -> Path:
+    """节流状态文件按项目分开存。
+
+    以前两个页面共用一个 .last-publish.json，A 页面发布完就把 B 页面的
+    "上次发布价"覆盖了，于是两边都认为"价格变了"→ 节流形同失效 → 白耗免费额度。
+    """
+    safe = re.sub(r"[^A-Za-z0-9_.-]", "_", project or "default")
+    return ROOT / f".last-publish.{safe}.json"
 
 
 def has_oauth_login() -> bool:
@@ -109,14 +118,14 @@ def run(cmd: list, cwd: Path, env: dict, quiet: bool = False):
     return proc.returncode, proc.stdout or ""
 
 
-def load_last_publish() -> dict:
+def load_last_publish(project: str) -> dict:
     try:
-        return json.loads(LAST_PUBLISH.read_text(encoding="utf-8"))
+        return json.loads(state_file(project).read_text(encoding="utf-8"))
     except Exception:
         return {}
 
 
-def should_skip_publish(deploy_dir: Path, min_interval_minutes: int,
+def should_skip_publish(project: str, deploy_dir: Path, min_interval_minutes: int,
                         max_per_day: int) -> tuple:
     """发布节流：避免把 Cloudflare Pages 的免费额度耗光。
 
@@ -127,7 +136,7 @@ def should_skip_publish(deploy_dir: Path, min_interval_minutes: int,
     价格一旦变化则立即发布（这才是用户真正关心的）。
     返回 (是否跳过, 原因)。
     """
-    rec = load_last_publish()
+    rec = load_last_publish(project)
     try:
         meta = json.loads((deploy_dir / "meta.json").read_text(encoding="utf-8"))
     except Exception:
@@ -152,12 +161,13 @@ def should_skip_publish(deploy_dir: Path, min_interval_minutes: int,
     return False, ""
 
 
-def record_publish(record: dict):
-    old = load_last_publish()
+def record_publish(project: str, record: dict):
+    old = load_last_publish(project)
     times = list(old.get("publish_times") or [])
     times.append(record["published_at"])
     record["publish_times"] = times[-40:]
-    LAST_PUBLISH.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
+    state_file(project).write_text(json.dumps(record, ensure_ascii=False, indent=2),
+                                   encoding="utf-8")
 
 
 def main() -> int:
@@ -219,7 +229,7 @@ def main() -> int:
     if max_per_day < 0:
         max_per_day = int(pub.get("max_per_day", 12) or 12)
     if not args.force:
-        skip, why = should_skip_publish(deploy_dir, min_interval, max_per_day)
+        skip, why = should_skip_publish(project, deploy_dir, min_interval, max_per_day)
         if skip:
             print(f"跳过发布（节流）：{why}")
             print("  需要强制发布可加 --force")
@@ -285,14 +295,14 @@ def main() -> int:
         record["meta"] = meta
     except Exception:
         pass
-    record_publish(record)
+    record_publish(project, record)
 
     print(f"\n发布成功：{url}")
     print(f"  - 页面      : {url}/")
     print(f"  - 最新一轮  : {url}/latest.json")
     print(f"  - 价格历史  : {url}/history.json")
     print(f"  - 摘要      : {url}/meta.json")
-    print(f"  发布记录: {LAST_PUBLISH}")
+    print(f"  发布记录: {state_file(project)}")
     return 0
 
 

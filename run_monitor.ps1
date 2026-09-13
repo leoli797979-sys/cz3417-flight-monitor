@@ -135,6 +135,29 @@ function Publish-Snapshot {
     }
 }
 
+function Publish-SecondPage {
+    # The evening-flights page (config.w5.yaml) shares the same scrape and the same DB
+    # (one route fetch already contains every flight), so it only needs re-rendering -
+    # no extra requests, no extra rate-limit budget. It has its own Pages project.
+    $cfg2 = Join-Path $root "config.w5.yaml"
+    if (-not (Test-Path $cfg2)) { return }
+
+    $tmpOut2 = Join-Path $logDir "task.w5.stdout.tmp"
+    $tmpErr2 = Join-Path $logDir "task.w5.stderr.tmp"
+    Remove-Item $tmpOut2, $tmpErr2 -ErrorAction SilentlyContinue
+
+    $p2 = Start-Process -FilePath $py -ArgumentList @("publish.py", "-q", "-c", "config.w5.yaml") `
+        -WorkingDirectory $root -NoNewWindow -PassThru -Wait `
+        -RedirectStandardOutput $tmpOut2 -RedirectStandardError $tmpErr2
+    foreach ($f in @($tmpOut2, $tmpErr2)) {
+        if (Test-Path $f) {
+            Get-Content -Path $f -Encoding UTF8 | ForEach-Object { Write-Log ("  [w5] " + $_) }
+        }
+    }
+    Remove-Item $tmpOut2, $tmpErr2 -ErrorAction SilentlyContinue
+    Write-Log ("second page publish exit code " + $p2.ExitCode)
+}
+
 try {
     Write-Log ("===== start round (headless={0}) =====" -f (-not $Show))
     $pyArgs = @("main.py", "--once", "-c", $Config)
@@ -165,6 +188,9 @@ try {
     # Publishing itself is done by .github/workflows/publish.yml (triggered by this push):
     # cloud-side scraping is impossible because qunar redirects datacenter IPs to a login page.
     if ($code -eq 0) { Publish-Snapshot }
+
+    # Re-render + publish the evening-flights page (shares the same DB, no extra scraping).
+    if ($code -eq 0) { Publish-SecondPage }
 
     # Scheduled runs wake the machine; send it back to sleep when nobody is around.
     if ($SleepAfter) { Invoke-IdleSleep -IdleMinutes $IdleMinutes -DryRun:$DryRunSleep }

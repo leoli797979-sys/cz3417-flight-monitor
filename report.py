@@ -1,14 +1,16 @@
 """生成自包含的 HTML 监控报告（无外部依赖，可离线打开、可被定时任务反复覆盖刷新）
 
-用法：
-    python report.py                      # 用 config.yaml，输出 report.html
+支持单班次与多班次：
+    python report.py -c config.yaml       # 单班次（CZ3417 页面）
+    python report.py -c config.w5.yaml    # 多班次（晚间 5 班页面）
     python report.py -o 我的报告.html
     python report.py --flight CZ3417      # 覆盖要重点展示的航班号
 
 设计要点：
 * 单文件、无 CDN、无 JS 依赖 —— 定时任务生成后可直接双击打开，断网也能看
-* 内联 SVG 画价格走势（自己算坐标，不引图表库）
+* 内联 SVG 画价格走势（多班次多序列，自己算坐标，不引图表库）
 * 页面可配自动刷新（默认 300 秒），适合挂在副屏当监控面板
+* 单班次时自动隐藏"班次对照表"，页面外观与单班次版本一致
 """
 from __future__ import annotations
 
@@ -18,10 +20,17 @@ import json
 import sqlite3
 import statistics
 import sys
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
 import yaml
+
+try:
+    from core.flights import carrier_name as _carrier_name
+except Exception:                      # 只装了 PyYAML 的环境（如发布用 CI）也能单独跑
+    def _carrier_name(flight_no):
+        return ""
 
 CARD_CSS = """
 * { box-sizing: border-box; }
@@ -217,20 +226,53 @@ def _nice_bounds(lo: float, hi: float) -> tuple[float, float]:
     return lo - pad, hi + pad
 
 
-def svg_price_chart(points: list, threshold: float = 0, width: int = 1060,
-                    height: int = 280) -> str:
-    """points: [{'fetched_at': str, 'price': float}]（按时间升序）"""
-    if not points:
+def all_flights_history(conn, flights: list, date: str) -> dict:
+    """一次查出所有监控班次的价格历史：{航班号: [{'fetched_at','price'}, ...]}"""
+    if not flights:
+        return {}
+    marks = ",".join("?" for _ in flights)
+    sql = (f"SELECT UPPER(REPLACE(flight_no,' ','')) AS fno, fetched_at, MIN(price) AS price "
+           f"FROM flight_prices WHERE UPPER(REPLACE(flight_no,' ','')) IN ({marks})")
+    args = [f.upper().replace(" ", "") for f in flights]
+    if date:
+        sql += " AND depart_date = ?"
+        args.append(date)
+    sql += " GROUP BY fno, fetched_at ORDER BY fetched_at ASC"
+    out: dict = {}
+    for r in conn.execute(sql, args):
+        out.setdefault(r["fno"], []).append(
+            {"fetched_at": r["fetched_at"], "price": float(r["price"])})
+    return out
+
+
+# 多班次折线图的配色（最多支持 8 个班次，超出后循环使用）
+CHART_COLORS = ["#1f6feb", "#cf222e", "#1a7f37", "#8250df",
+                "#bc4c00", "#0969da", "#bf3989", "#6e7781"]
+
+LEGEND_CSS = """
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 0 0; font-size: 12.5px; }
+.legend .lg { display: inline-flex; align-items: center; gap: 6px; color: #424a53; }
+.legend .lg i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.legend .lg b { font-weight: 600; }
+"""
+
+
+def svg_multi_chart(series: dict, threshold: float = 0, width: int = 1060,
+                    height: int = 360) -> str:
+    """多班次价格走势图。series: {航班号: [{'fetched_at','price'}, ...]}（各按时间升序）"""
+    series = {k: v for k, v in (series or {}).items() if v}
+    if not series:
         return '<div class="empty">暂无历史样本。跑够两轮抓取后这里会出现价格走势。</div>'
 
-    pad_l, pad_r, pad_t, pad_b = 62, 22, 26, 42
-    inner_w = width - pad_l - pad_r
-    inner_h = height - pad_t - pad_b
-    prices = [float(p["price"]) for p in points]
-    lo, hi = _nice_bounds(min(prices), max(prices))
+    times = sorted({p["fetched_at"] for v in series.values() for p in v})
+    all_prices = [p["price"] for v in series.values() for p in v]
+    lo, hi = _nice_bounds(min(all_prices), max(all_prices))
     if threshold and threshold > 0:
         lo = min(lo, threshold - (hi - lo) * 0.05)
-    n = len(points)
+
+    pad_l, pad_r, pad_t, pad_b = 68, 30, 30, 48
+    inner_w, inner_h = width - pad_l - pad_r, height - pad_t - pad_b
+    n = len(times)
 
     def x_at(i: int) -> float:
         return pad_l + (inner_w / 2 if n == 1 else inner_w * i / (n - 1))
@@ -239,10 +281,9 @@ def svg_price_chart(points: list, threshold: float = 0, width: int = 1060,
         return pad_t + inner_h * (1 - (v - lo) / (hi - lo))
 
     parts = [f'<svg viewBox="0 0 {width} {height}" width="100%" height="{height}" '
-             f'role="img" aria-label="价格走势" style="display:block">',
+             f'role="img" aria-label="多班次价格走势" style="display:block">',
              f'<rect x="0" y="0" width="{width}" height="{height}" fill="#fff"/>']
 
-    # 横向网格 + y 轴刻度
     ticks = 4
     for k in range(ticks + 1):
         v = lo + (hi - lo) * k / ticks
@@ -252,7 +293,6 @@ def svg_price_chart(points: list, threshold: float = 0, width: int = 1060,
         parts.append(f'<text x="{pad_l - 10}" y="{y + 4:.1f}" text-anchor="end" '
                      f'font-size="11.5" fill="#656d76">¥{v:.0f}</text>')
 
-    # 阈值线
     if threshold and lo <= threshold <= hi:
         y = y_at(threshold)
         parts.append(f'<line x1="{pad_l}" y1="{y:.1f}" x2="{width - pad_r}" y2="{y:.1f}" '
@@ -260,40 +300,129 @@ def svg_price_chart(points: list, threshold: float = 0, width: int = 1060,
         parts.append(f'<text x="{width - pad_r}" y="{y - 7:.1f}" text-anchor="end" '
                      f'font-size="11.5" fill="#cf222e">告警阈值 ¥{threshold:.0f}</text>')
 
-    # 折线 + 面积
-    coords = [(x_at(i), y_at(float(p["price"]))) for i, p in enumerate(points)]
-    if n > 1:
-        line = " ".join(f"{x:.1f},{y:.1f}" for x, y in coords)
-        area = (f"{coords[0][0]:.1f},{pad_t + inner_h:.1f} " + line +
-                f" {coords[-1][0]:.1f},{pad_t + inner_h:.1f}")
-        parts.append(f'<polygon points="{area}" fill="rgba(31,111,235,.10)"/>')
-        parts.append(f'<polyline points="{line}" fill="none" stroke="#1f6feb" '
-                     f'stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>')
+    ordered = sorted(series.items(), key=lambda kv: kv[1][-1]["price"])
+    for idx, (fno, pts) in enumerate(ordered):
+        color = CHART_COLORS[idx % len(CHART_COLORS)]
+        coords = [(x_at(times.index(p["fetched_at"])), y_at(p["price"])) for p in pts]
+        if len(coords) > 1:
+            line = " ".join(f"{x:.1f},{y:.1f}" for x, y in coords)
+            parts.append(f'<polyline points="{line}" fill="none" stroke="{color}" '
+                         f'stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>')
+        for x, y in coords:
+            parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3.8" fill="#fff" '
+                         f'stroke="{color}" stroke-width="2.2"/>')
+        lx, ly = coords[-1]
+        dy = -12 if idx % 2 == 0 else 20
+        label = f"{fno[2:] if len(fno) > 2 else fno} ¥{pts[-1]['price']:.0f}"
+        parts.append(f'<text x="{lx + 7:.1f}" y="{ly + dy:.1f}" font-size="11" '
+                     f'font-weight="600" fill="{color}">{html.escape(label)}</text>')
 
-    # 数据点 + 数值标注
-    for i, ((x, y), p) in enumerate(zip(coords, points)):
-        color = "#1f6feb"
-        if threshold and float(p["price"]) <= threshold:
-            color = "#1a7f37"
-        parts.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4.2" fill="#fff" '
-                     f'stroke="{color}" stroke-width="2.4"/>')
-        if n <= 14 or i in (0, n - 1):
-            parts.append(f'<text x="{x:.1f}" y="{y - 12:.1f}" text-anchor="middle" '
-                         f'font-size="11.5" fill="#424a53">¥{float(p["price"]):.0f}</text>')
-
-    # x 轴时间标签
-    idxs = sorted({0, n - 1} | ({n // 2} if n >= 3 else set()))
-    for i in idxs:
-        label = str(points[i]["fetched_at"])[5:16]
-        parts.append(f'<text x="{x_at(i):.1f}" y="{height - 14}" text-anchor="middle" '
-                     f'font-size="11.5" fill="#656d76">{html.escape(label)}</text>')
+    for i in sorted({0, n - 1} | ({n // 2} if n >= 3 else set())):
+        parts.append(f'<text x="{x_at(i):.1f}" y="{height - 16}" text-anchor="middle" '
+                     f'font-size="11.5" fill="#656d76">{html.escape(str(times[i])[5:16])}</text>')
     parts.append('</svg>')
+
+    items = []
+    for idx, (fno, pts) in enumerate(ordered):
+        color = CHART_COLORS[idx % len(CHART_COLORS)]
+        items.append(f'<span class="lg"><i style="background:{color}"></i>'
+                     f'{html.escape(fno)} <b>¥{pts[-1]["price"]:.0f}</b></span>')
+    parts.append('<div class="legend">' + "".join(items) + '</div>')
     return "".join(parts)
 
+def _plausible_times(row: dict) -> bool:
+    """起飞时刻是否自洽（非空，且不晚于到达时刻）。"""
+    d = (row.get("depart_time") or "").strip()
+    a = (row.get("arrive_time") or "").strip()
+    return bool(d) and (not a or d < a)
 
-# --------------------------------------------------------------------------
-# 页面组装
-# --------------------------------------------------------------------------
+
+def _pick_field(group: list, field: str) -> str:
+    """从同一班次的若干行里挑一个最可信的字段值。
+
+    去哪儿的字段拼接会让个别行的时刻/机型被邻行内容串到（例如 MF1192 出现 07:05→22:40），
+    所以不能只看"最低价那一条"：这里按出现次数投票取众数，抗单条脏数据。
+    时刻字段另外要求自洽（dep < arr）。
+    """
+    vals = []
+    for r in group:
+        if field == "depart_time" and not _plausible_times(r):
+            continue
+        if field == "aircraft":
+            v = _aircraft_of(r)
+        else:
+            v = (r.get(field) or "").strip()
+        if v:
+            vals.append(v)
+    if not vals:
+        return ""
+    return Counter(vals).most_common(1)[0][0]
+
+
+def compute_stats(rows: list, series: dict, watch: list, is_suspect, threshold: float = 0.0) -> dict:
+    """按班次汇总当前价与历史统计。
+
+    页面与 JSON 接口共用这一份逻辑 —— 否则两边很容易算出不同的数（曾经踩过）。
+    """
+    grouped: dict = {}
+    for r in rows:
+        fno = (r.get("flight_no") or "").upper().replace(" ", "")
+        if fno not in watch or r.get("route_level"):
+            continue
+        grouped.setdefault(fno, []).append(r)
+
+    current = {}
+    for fno, group in grouped.items():
+        # 价格取最低；同价时优先时刻自洽的那条（避免选中被污染的记录）
+        sane = [r for r in group if not is_suspect(r["price"])]
+        pool = sane or group
+        current[fno] = min(pool, key=lambda r: (r["price"], 0 if _plausible_times(r) else 1))
+
+    stats = []
+    for fno in watch:
+        pts = series.get(fno) or []
+        prices = [p["price"] for p in pts]
+        cur = current.get(fno)
+        group = grouped.get(fno, [])
+        cur_price = float(cur["price"]) if cur else (prices[-1] if prices else None)
+        # 展示用字段跨行补齐：单个字段脏了也能从别的行拿到干净值
+        dep_t = (cur.get("depart_time") or "").strip() if cur else ""
+        if not _plausible_times(cur or {}):
+            dep_t = _pick_field(group, "depart_time")
+        cur_price = float(cur["price"]) if cur else (prices[-1] if prices else None)
+        stats.append({
+            "flight_no": fno,
+            "airline": _carrier_name(fno) or _pick_field(group, "airline")
+                       or (cur or {}).get("airline", ""),
+            "aircraft": _pick_field(group, "aircraft") or _aircraft_of(cur),
+            "depart_time": dep_t,
+            "arrive_time": _pick_field(group, "arrive_time")
+                           or (cur or {}).get("arrive_time", "") or "",
+            "dep_airport": _airport_of(cur)[0] if cur else "",
+            "arr_airport": _airport_of(cur)[1] if cur else "",
+            "current": cur_price,
+            "min": min(prices) if prices else None,
+            "max": max(prices) if prices else None,
+            "avg": (sum(prices) / len(prices)) if prices else None,
+            "samples": len(prices),
+            "first": prices[0] if prices else None,
+            "delta": (cur_price - prices[0]) if (cur_price is not None and prices) else None,
+            "fetched": (cur or {}).get("fetched_at", ""),
+            "platform": (cur or {}).get("platform", ""),
+            "below_threshold": bool(threshold > 0 and cur_price is not None
+                                    and cur_price <= threshold),
+        })
+    ranked = sorted([s for s in stats if s["current"] is not None],
+                    key=lambda s: s["current"])
+    return {
+        "stats": stats,
+        "current": current,
+        "ranked": ranked,
+        "cheapest": ranked[0] if ranked else None,
+        "missing": [s["flight_no"] for s in stats if s["current"] is None],
+        "total_samples": max([s["samples"] for s in stats] or [0]),
+    }
+
 def _esc(v) -> str:
     return html.escape(str(v if v is not None else ""))
 
@@ -331,6 +460,20 @@ def price_guard(rows: list, ratio: float = 0.35) -> tuple[float, callable]:
     return cut, (lambda p: float(p) < cut)
 
 
+def _aircraft_of(row: dict) -> str:
+    """从 extra 里取机型。"""
+    if not row:
+        return ""
+    try:
+        return json.loads(row.get("extra") or "{}").get("aircraft", "") or ""
+    except Exception:
+        return ""
+
+
+def _badge(text: str, kind: str = "info") -> str:
+    return f'<span class="badge {kind}">{html.escape(text)}</span>'
+
+
 def build_html(cfg: dict, conn, out_path: str) -> str:
     out = cfg.get("output") or {}
     route = (cfg.get("routes") or [{}])[0]
@@ -343,87 +486,183 @@ def build_html(cfg: dict, conn, out_path: str) -> str:
     to_code = route.get("to", "")
     line_label = f"{from_name}({from_code}) → {to_name}({to_code})"
     refresh = int(out.get("report_refresh_seconds", 300) or 0)
+    multi = len(watch) > 1
+    flight_word = "监控班次" if multi else "目标航班"
+    primary_label = (watch[0] if watch else "机票")
 
     latest = latest_round_rows(conn)
-    if isinstance(latest, tuple):
-        rows, last_fetch = latest
-    else:
-        rows, last_fetch = [], None
-
-    history = target_history(conn, watch, date)
+    rows, last_fetch = latest if isinstance(latest, tuple) else ([], None)
+    series = all_flights_history(conn, watch, date)
     positions = all_positions(conn, watch, date)
-
-    # 识别被拼接截断的假低价（见 price_guard 注释）
     suspect_cut, is_suspect = price_guard(rows)
 
-    # ---- 目标航班当前价（同轮内跨平台取低）----
-    target_rows = [r for r in rows
-                   if r.get("flight_no", "").upper().replace(" ", "") in watch]
-    cur = min(target_rows, key=lambda r: r["price"]) if target_rows else None
+    # ---- 各班次当前价与历史统计（与 JSON 接口共用 compute_stats，避免两处算法分叉）----
+    st = compute_stats(rows, series, watch, is_suspect, threshold)
+    stats = st["stats"]
+    ranked = st["ranked"]
+    cheapest = st["cheapest"]
+    missing = st["missing"]
+    total_samples = st["total_samples"]
 
-    # ---- 统计 ----
-    if history:
-        hp = [float(h["price"]) for h in history]
-        h_lo, h_hi, h_avg = min(hp), max(hp), sum(hp) / len(hp)
-        first_price = hp[0]
-        delta = (float(cur["price"]) - first_price) if cur else 0.0
-    else:
-        h_lo = h_hi = h_avg = first_price = delta = 0.0
-
-    # ---- 陈旧告警：超过 3 倍抓取间隔没更新就提示 ----
+    # ---- 陈旧提醒 ----
     stale = ""
     if last_fetch:
         try:
-            age_min = (datetime.now() - datetime.strptime(last_fetch, "%Y-%m-%d %H:%M:%S")).total_seconds() / 60
+            age = (datetime.now() - datetime.strptime(
+                last_fetch, "%Y-%m-%d %H:%M:%S")).total_seconds() / 60
             interval = float((cfg.get("schedule") or {}).get("interval_minutes", 90) or 90)
-            if age_min > interval * 3:
-                stale = (f'<div class="banner">⚠️ 最近一次抓取是 {age_min:.0f} 分钟前'
-                         f'（配置间隔 {interval:.0f} 分钟），定时任务可能已停止或抓取持续失败，'
+            if age > interval * 3:
+                stale = (f'<div class="banner">⚠️ 最近一次抓取是 {age:.0f} 分钟前'
+                         f'（配置间隔 {interval:.0f} 分钟），定时任务可能已停止或持续抓取失败，'
                          f'请检查计划任务与 <code>logs/monitor.log</code>。</div>')
         except Exception:
             pass
 
-    # ---- 卡片 ----
-    if cur:
-        dep_s, arr_s = _airport_of(cur)
-        delta_cls = "down" if delta < 0 else ("up" if delta > 0 else "")
-        delta_txt = f"较首次样本 {'+' if delta > 0 else ''}¥{delta:.0f}" if len(history) > 1 else "样本不足，暂无趋势"
-        thr_txt = f"¥{threshold:.0f}" if threshold else "未设置"
-        thr_note = ("已低于阈值，会触发推送" if threshold and cur["price"] <= threshold
-                    else ("高于阈值，暂不推送" if threshold else "设置 alert_threshold 后生效"))
-        cards = f"""
-  <div class="card primary">
-    <span class="label">目标航班当前最低价</span>
-    <span class="value">¥{float(cur['price']):.0f}</span>
-    <span class="delta {delta_cls}">{_esc(delta_txt)}</span>
-  </div>
-  <div class="card">
-    <span class="label">航班 / 时刻</span>
-    <span class="value" style="font-size:20px">{_esc(cur['flight_no'])}</span>
-    <span class="note">{_esc(cur.get('depart_time') or '--:--')} → {_esc(cur.get('arrive_time') or '--:--')}
-      {'· ' + _esc(cur.get('aircraft')) if cur.get('aircraft') else ''}</span>
-  </div>
-  <div class="card">
-    <span class="label">机场</span>
-    <span class="value" style="font-size:17px">{_esc(dep_s or from_name)}</span>
-    <span class="note">→ {_esc(arr_s or to_name)}</span>
-  </div>
-  <div class="card">
-    <span class="label">历史区间（{len(history)} 个样本）</span>
-    <span class="value" style="font-size:20px">¥{h_lo:.0f} – ¥{h_hi:.0f}</span>
-    <span class="note">均价 ¥{h_avg:.0f}</span>
-  </div>
-  <div class="card">
-    <span class="label">告警阈值</span>
-    <span class="value" style="font-size:20px">{_esc(thr_txt)}</span>
-    <span class="note">{_esc(thr_note)}</span>
-  </div>"""
-    else:
-        cards = ('<div class="card"><span class="label">目标航班</span>'
-                 '<span class="value" style="font-size:18px">本轮未抓到</span>'
-                 '<span class="note">见下方"运行状态"与日志</span></div>')
+    if missing:
+        stale += (f'<div class="banner">本轮未抓到：'
+                  f'{"、".join(html.escape(m) for m in missing)}'
+                  f'（可能未执飞 / 售罄 / 平台未返回该班次）。</div>')
 
-    # ---- 市场参考（排除疑似截断的假低价）----
+    # ---- 卡片 ----
+    cards = []
+    if multi:
+        summary_bits = []
+        if cheapest:
+            summary_bits.append(f"最低 <b>{html.escape(cheapest['flight_no'])}</b> "
+                                f"¥{cheapest['current']:.0f}")
+        summary_bits.append(f"{len(watch)} 个班次")
+        summary_bits.append(f"{total_samples} 轮样本")
+        cards.append(f"""
+  <div class="card">
+    <span class="label">本轮概览</span>
+    <span class="value" style="font-size:20px">{' · '.join(summary_bits)}</span>
+    <span class="note">最近抓取 {html.escape(last_fetch or '—')} · 数据源
+      {html.escape(' / '.join(cfg.get('platforms') or []) or '—')}</span>
+  </div>""")
+
+    for s in stats:
+        is_best = cheapest is not None and s["flight_no"] == cheapest["flight_no"]
+        if s["current"] is None:
+            cards.append(f"""
+  <div class="card">
+    <span class="label">{html.escape(s['flight_no'])} {html.escape(s['airline'])}</span>
+    <span class="value" style="font-size:19px;color:#8c959f">本轮未抓到</span>
+    <span class="note">{html.escape(s['depart_time'] or '--:--')} → {html.escape(s['arrive_time'] or '--:--')}</span>
+  </div>""")
+            continue
+        delta = s["delta"]
+        cls = "" if not delta else ("down" if delta < 0 else "up")
+        delta_txt = ("较首次样本 持平" if (delta is not None and abs(delta) < 0.5)
+                     else (f"较首次 {'+' if delta > 0 else ''}¥{delta:.0f}"
+                           if delta is not None else "样本不足"))
+        rng = (f"区间 ¥{s['min']:.0f}–¥{s['max']:.0f}"
+               if s["min"] is not None else "无历史")
+        below = threshold > 0 and s["current"] <= threshold
+        cards.append(f"""
+  <div class="card{' primary' if is_best else ''}">
+    <span class="label">{html.escape(s['flight_no'])} {html.escape(s['airline'])}
+      {'<b style="color:#1f6feb">当前最低</b>' if is_best and multi else ''}</span>
+    <span class="value" style="font-size:26px">¥{s['current']:.0f}</span>
+    <span class="note">{html.escape(s['depart_time'] or '--:--')} → {html.escape(s['arrive_time'] or '--:--')}
+      {'· ' + html.escape(s['arr_airport']) if s['arr_airport'] else ''}</span>
+    <span class="delta {cls}">{html.escape(delta_txt)} · {html.escape(rng)}</span>
+    {('<span class="delta down">已低于阈值 ¥%.0f</span>' % threshold) if below else ''}
+  </div>""")
+    cards_html = "\n".join(cards)
+
+    # ---- 走势图 ----
+    chart = svg_multi_chart(series, threshold)
+
+    # ---- 班次对照表（多班次时才有意义）----
+    compare = ""
+    if multi and stats:
+        trs = []
+        for i, s in enumerate(ranked):
+            gap = ""
+            if cheapest and s["current"] is not None and i > 0:
+                gap = f"+¥{s['current'] - cheapest['current']:.0f}"
+            elif i == 0:
+                gap = "最低"
+            state = []
+            if i == 0:
+                state.append(_badge("当前最低", "ok"))
+            if threshold > 0 and s["current"] is not None and s["current"] <= threshold:
+                state.append(_badge("已低于阈值", "info"))
+            trs.append(f"""<tr data-flight="{html.escape(s['flight_no'])}" data-price="{s['current']:.0f}">
+      <td class="mono">{html.escape(s['flight_no'])}</td>
+      <td>{html.escape(s['airline'])}</td>
+      <td>{html.escape(s['aircraft'])}</td>
+      <td class="mono">{html.escape(s['depart_time'] or '--:--')} → {html.escape(s['arrive_time'] or '--:--')}</td>
+      <td>{html.escape(s['arr_airport'])}</td>
+      <td class="mono"><b>¥{s['current']:.0f}</b></td>
+      <td class="mono">{gap}</td>
+      <td class="mono">{('¥%.0f–¥%.0f' % (s['min'], s['max'])) if s['min'] is not None else '—'}</td>
+      <td class="mono">{('¥%.0f' % s['avg']) if s['avg'] is not None else '—'}</td>
+      <td class="mono">{s['samples']}</td>
+      <td>{''.join(state)}</td>
+    </tr>""")
+        for s in stats:
+            if s["current"] is None:
+                trs.append(f"""<tr>
+      <td class="mono">{html.escape(s['flight_no'])}</td>
+      <td>{html.escape(s['airline'])}</td><td>—</td>
+      <td class="mono">{html.escape(s['depart_time'] or '--:--')} → {html.escape(s['arrive_time'] or '--:--')}</td>
+      <td>{html.escape(s['arr_airport'])}</td><td>—</td><td>—</td><td>—</td><td>—</td>
+      <td class="mono">{s['samples']}</td><td>{_badge('本轮未抓到', 'warn')}</td>
+    </tr>""")
+        compare = f"""
+  <section>
+    <h2>{flight_word}对照</h2>
+    <p class="hint">同一航线同一天的各班次横向对比，按当前价升序。价格均为平台展示的经济舱最低价。</p>
+    <div class="scroll"><table>
+      <thead><tr>
+        <th>航班</th><th>航司</th><th>机型</th><th>时刻</th><th>到达</th>
+        <th>当前价</th><th>较最低</th><th>历史区间</th><th>均价</th><th>样本</th><th>状态</th>
+      </tr></thead>
+      <tbody>{''.join(trs)}</tbody>
+    </table></div>
+  </section>"""
+
+    # ---- 当日全部航班价目 ----
+    by_flight: dict = {}
+    for r in rows:
+        by_flight.setdefault(r.get("flight_no") or "（全航线最低价）", []).append(r)
+    table_rows = []
+    for key, group in by_flight.items():
+        best = min(group, key=lambda x: x["price"])
+        platforms = " / ".join(f"{g['platform']}¥{float(g['price']):.0f}" for g in
+                               sorted(group, key=lambda x: x["price"]))
+        dep_s, arr_s = _airport_of(best)
+        notes = ""
+        if best.get("depart_time") and best.get("arrive_time") \
+                and best["depart_time"] > best["arrive_time"]:
+            notes += _badge("起飞时刻可疑", "warn")
+        if is_suspect(best["price"]):
+            notes += _badge("价格可疑", "warn")
+        if not best.get("flight_no"):
+            notes += _badge("仅全航线最低价", "info")
+        is_watched = key in watch
+        if is_watched:
+            notes += _badge(flight_word, "ok")
+        try:
+            arr_id = (json.loads(best.get("extra") or "{}").get("arr_airport_id") or "").upper()
+        except Exception:
+            arr_id = ""
+        table_rows.append((best["price"], f"""<tr class="{'target' if is_watched else ''}" data-price="{float(best['price']):.0f}" data-dep="{html.escape(best.get('depart_time') or '')}" data-ctu="{1 if arr_id == 'CTU' else 0}">
+      <td class="mono">{html.escape(key)}</td>
+      <td>{html.escape(best.get('airline') or '')}</td>
+      <td>{html.escape(_aircraft_of(best))}</td>
+      <td class="mono">{html.escape(best.get('depart_time') or '--:--')} → {html.escape(best.get('arrive_time') or '--:--')}</td>
+      <td>{html.escape(dep_s)}</td>
+      <td>{html.escape(arr_s)}</td>
+      <td class="mono"><b>¥{float(best['price']):.0f}</b></td>
+      <td style="font-size:12.5px;color:#656d76">{html.escape(platforms)}</td>
+      <td>{notes}</td>
+    </tr>"""))
+    table_rows.sort(key=lambda t: t[0])
+    table_body = "\n".join(h for _, h in table_rows) or \
+        '<tr><td colspan="9" class="empty">暂无数据</td></tr>'
+
     ctu = [r for r in rows
            if json.loads(r.get("extra") or "{}").get("arr_airport_id") == "CTU"
            and not is_suspect(r["price"])]
@@ -436,108 +675,74 @@ def build_html(cfg: dict, conn, out_path: str) -> str:
         tfu_min = f"¥{min(r['price'] for r in tfu):.0f}" if tfu else "—"
         market = (f'<p class="hint">同日市场参考：落 <b>双流 CTU</b> 最低 {ctu_min}'
                   f'（{len(ctu)} 班） · 落 <b>天府 TFU</b> 最低 {tfu_min}（{len(tfu)} 班）。'
-                  f'注意 15:15 这班在平台上会以多个共享航班号重复列示，价格相同。</p>')
+                  f'平台会把同一物理航班按多个共享航班号重复列示，价格相同。</p>')
 
-    # ---- 价目表：同轮内按航班号归并，取跨平台最低 ----
-    by_flight: dict = {}
-    for r in rows:
-        key = r.get("flight_no") or "（全航线最低价）"
-        by_flight.setdefault(key, []).append(r)
-    table_rows = []
-    for key, group in by_flight.items():
-        best = min(group, key=lambda x: x["price"])
-        platforms = " / ".join(f"{g['platform']}¥{float(g['price']):.0f}" for g in
-                               sorted(group, key=lambda x: x["price"]))
-        dep_s, arr_s = _airport_of(best)
-        suspect = ""
-        if best.get("depart_time") and best.get("arrive_time") \
-                and best["depart_time"] > best["arrive_time"]:
-            suspect = '<span class="badge warn">起飞时刻可疑</span>'
-        is_target = key in watch
-        tgt_badge = '<span class="badge ok">目标</span>' if is_target else ""
-        if not best.get("flight_no"):
-            suspect += '<span class="badge info">仅全航线最低价</span>'
-        if is_suspect(best["price"]):
-            suspect += '<span class="badge warn">价格可疑</span>'
-        try:
-            arr_id = (json.loads(best.get("extra") or "{}").get("arr_airport_id") or "").upper()
-        except Exception:
-            arr_id = ""
-        table_rows.append((best["price"], f"""<tr class="{'target' if is_target else ''}" \
-data-price="{float(best['price']):.0f}" data-dep="{_esc(best.get('depart_time') or '')}" \
-data-ctu="{1 if arr_id == 'CTU' else 0}">
-      <td class="mono">{_esc(key)}{tgt_badge}</td>
-      <td>{_esc(best.get('airline'))}</td>
-      <td>{_esc(best.get('aircraft'))}</td>
-      <td class="mono">{_esc(best.get('depart_time') or '--:--')} → {_esc(best.get('arrive_time') or '--:--')}</td>
-      <td>{_esc(dep_s)}</td>
-      <td>{_esc(arr_s)}</td>
-      <td class="mono"><b>¥{float(best['price']):.0f}</b></td>
-      <td style="font-size:12.5px;color:#656d76">{_esc(platforms)}</td>
-      <td>{suspect}</td>
-    </tr>"""))
-    table_rows.sort(key=lambda t: t[0])
-    table_body = "\n".join(html_row for _, html_row in table_rows) or \
-        '<tr><td colspan="9" class="empty">暂无数据</td></tr>'
-
-    # ---- 目标航班抓取明细 ----
+    # ---- 抓取明细 ----
     detail = ""
     if positions:
         trs = []
-        for p in positions[:40]:
+        for p in positions[:60]:
             trs.append(f"""<tr>
-      <td class="mono">{_esc(p['fetched_at'])}</td>
-      <td>{_esc(p['platform'])}</td>
-      <td class="mono">{_esc(p.get('depart_time') or '--:--')} → {_esc(p.get('arrive_time') or '--:--')}</td>
+      <td class="mono">{html.escape(p['fetched_at'])}</td>
+      <td class="mono">{html.escape(p.get('flight_no') or '')}</td>
+      <td>{html.escape(p['platform'])}</td>
+      <td class="mono">{html.escape(p.get('depart_time') or '--:--')} → {html.escape(p.get('arrive_time') or '--:--')}</td>
       <td class="mono">¥{float(p['price']):.0f}</td>
-      <td>{_esc(p.get('airline'))}</td>
+      <td>{html.escape(p.get('airline') or '')}</td>
     </tr>""")
         detail = f"""
-<section>
-  <h2>目标航班抓取明细</h2>
-  <p class="hint">每次抓到该航班号的原始记录（最新在前，最多 40 条）。</p>
-  <div class="scroll"><table>
-    <thead><tr><th>抓取时间</th><th>平台</th><th>时刻</th><th>价格</th><th>航司</th></tr></thead>
-    <tbody>{''.join(trs)}</tbody>
-  </table></div>
-</section>"""
+  <section>
+    <h2>{flight_word}抓取明细</h2>
+    <p class="hint">每次抓到这些班次的原始记录（最新在前，最多 60 条）。</p>
+    <div class="scroll"><table>
+      <thead><tr><th>抓取时间</th><th>航班</th><th>平台</th><th>时刻</th><th>价格</th><th>航司</th></tr></thead>
+      <tbody>{''.join(trs)}</tbody>
+    </table></div>
+  </section>"""
 
     refresh_tag = (f'<meta http-equiv="refresh" content="{refresh}">' if refresh > 0 else "")
     refresh_note = f"页面每 {refresh} 秒自动刷新" if refresh > 0 else "自动刷新已关闭"
     gen_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    title = " · ".join(watch) if multi else (watch[0] if watch else "机票")
+    # 单班次页面保持原来的标题形态；多班次用航线 + 班次数的标题
+    h1 = (f"✈️ {html.escape(from_name)} → {html.escape(to_name)} 机票监控"
+          if multi else f"✈️ {html.escape(primary_label)} 价格监控")
 
     doc = f"""<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{_esc(' / '.join(watch) or '机票')} 机票监控报告</title>
+<title>{html.escape(title)} 机票监控</title>
 {refresh_tag}
-<style>{CARD_CSS}</style>
+<style>{CARD_CSS}{LEGEND_CSS}</style>
 </head>
 <body>
 <header>
   <div class="wrap">
-    <h1>✈️ {' / '.join(watch) if watch else '机票'} 价格监控</h1>
-    <p class="sub">{_esc(line_label)} · {_esc(date)}</p>
-    <p class="meta">生成时间 {_esc(gen_at)} · 最近抓取 {_esc(last_fetch or '—')} ·
-      数据源 {' / '.join(cfg.get('platforms') or []) or '—'} · {_esc(refresh_note)}</p>
+    <h1>{h1}</h1>
+    <p class="sub">{html.escape(' · '.join(watch)) if watch else '—'} · {html.escape(date)} ·
+      共 {len(watch)} 个{flight_word}</p>
+    <p class="meta">生成时间 {html.escape(gen_at)} · 最近抓取 {html.escape(last_fetch or '—')} ·
+      数据源 {html.escape(' / '.join(cfg.get('platforms') or []) or '—')} · {html.escape(refresh_note)}</p>
   </div>
 </header>
 
 <div class="wrap">
   {stale}
-  <div class="cards">{cards}</div>
+  <div class="cards">{cards_html}</div>
 
   <section>
     <h2>价格走势</h2>
-    <p class="hint">目标航班在每次抓取中的最低价。样本越多趋势越有意义；绿点表示已低于阈值。</p>
-    {svg_price_chart(history, threshold)}
+    <p class="hint">各{flight_word}在每次抓取中的最低价。样本越多趋势越有意义；虚线为告警阈值。</p>
+    {chart}
   </section>
+
+  {compare}
 
   <section>
     <h2>当日全部航班价目</h2>
-    {market or '<p class="hint">同轮抓取到的全部航班，按价格升序。目标航班已高亮。</p>'}
+    {market or '<p class="hint">同轮抓取到的全部航班，按价格升序。监控班次已高亮。</p>'}
     {QUERY_TOOLBAR}
     <div class="scroll"><table>
       <thead><tr>
@@ -553,15 +758,15 @@ data-ctu="{1 if arr_id == 'CTU' else 0}">
   <section>
     <h2>运行状态</h2>
     <div class="grid2">
-      <div><span>监控航线</span>{_esc(line_label)}</div>
-      <div><span>监控日期</span>{_esc(date)}</div>
-      <div><span>目标航班</span>{_esc(' / '.join(watch) or '（未设置）')}</div>
-      <div><span>起飞时刻窗</span>{_esc(route.get('depart_time_from') or '不限')} – {_esc(route.get('depart_time_to') or '不限')}</div>
-      <div><span>告警阈值</span>{_esc(('¥%.0f' % threshold) if threshold else '未设置')}</div>
-      <div><span>抓取间隔</span>{_esc((cfg.get('schedule') or {}).get('interval_minutes', '—'))} 分钟 ±
-        {_esc((cfg.get('schedule') or {}).get('jitter_minutes', 0))} 分钟</div>
+      <div><span>监控航线</span>{html.escape(line_label)}</div>
+      <div><span>监控日期</span>{html.escape(date)}</div>
+      <div><span>{flight_word}</span>{html.escape(' · '.join(watch) or '（未设置）')}</div>
+      <div><span>起飞时刻窗</span>{html.escape(route.get('depart_time_from') or '不限')} – {html.escape(route.get('depart_time_to') or '不限')}</div>
+      <div><span>告警阈值</span>{html.escape(('¥%.0f' % threshold) if threshold else '未设置')}</div>
+      <div><span>抓取间隔</span>{html.escape(str((cfg.get('schedule') or {}).get('interval_minutes', '—')))} 分钟 ±
+        {html.escape(str((cfg.get('schedule') or {}).get('jitter_minutes', 0)))} 分钟</div>
       <div><span>本轮记录数</span>{len(rows)} 条</div>
-      <div><span>历史样本</span>{len(history)} 轮</div>
+      <div><span>历史样本</span>{total_samples} 轮</div>
     </div>
   </section>
 
@@ -577,7 +782,6 @@ data-ctu="{1 if arr_id == 'CTU' else 0}">
     Path(out_path).parent.mkdir(parents=True, exist_ok=True)
     Path(out_path).write_text(doc, encoding="utf-8")
     return out_path
-
 
 def build_report(db_path: str, out_path: str, cfg: dict) -> str:
     """供 main.py 调用的入口：生成报告并返回路径。"""
@@ -628,18 +832,16 @@ def build_deploy_bundle(cfg: dict, conn, deploy_dir: str, db_path: str = "") -> 
     产出::
 
         index.html    报告页（含页面内查询 UI）
-        latest.json   最近一轮全部航班（供外部程序/脚本查询）
-        history.json  目标航班价格历史序列
-        meta.json     摘要（当前价/区间/样本数/更新时间）
+        latest.json   最近一轮全部航班 + 各监控班次当前价（供外部程序查询）
+        history.json  每个监控班次的价格历史序列
+        meta.json     摘要（各班次当前价/区间/样本数/更新时间）
         _headers      Cloudflare Pages 的缓存与安全响应头
     """
     d = Path(deploy_dir)
     d.mkdir(parents=True, exist_ok=True)
 
-    # 1) 报告页（复用已校验过的渲染逻辑）
     build_html(cfg, conn, str(d / "index.html"))
 
-    out = cfg.get("output") or {}
     route = (cfg.get("routes") or [{}])[0]
     watch = [str(w).upper().replace(" ", "") for w in (route.get("watch_flights") or [])]
     date = (route.get("dates") or [""])[0]
@@ -647,18 +849,22 @@ def build_deploy_bundle(cfg: dict, conn, deploy_dir: str, db_path: str = "") -> 
 
     latest = latest_round_rows(conn)
     rows, last_fetch = latest if isinstance(latest, tuple) else ([], None)
-    history = target_history(conn, watch, date)
+    series = all_flights_history(conn, watch, date)
+    _, is_suspect = price_guard(rows)
+    st = compute_stats(rows, series, watch, is_suspect, threshold)
+    stats, cheapest = st["stats"], st["cheapest"]
 
-    # 同轮内按航班号归并，取跨平台最低
+    # 同轮内按航班号归并，取跨平台最低（含未被监控的班次，方便外部程序查全量）
     by_flight: dict = {}
     for r in rows:
         by_flight.setdefault(r.get("flight_no") or "（全航线最低价）", []).append(r)
-
     flights = []
     for key, group in by_flight.items():
         best = min(group, key=lambda x: x["price"])
         item = _flight_row_json(best)
         item["flight_no"] = key if key != "（全航线最低价）" else ""
+        item["watched"] = key in watch
+        item["price_suspect"] = bool(is_suspect(best["price"]))
         item["platforms"] = [
             {"platform": g["platform"], "price": float(g["price"])}
             for g in sorted(group, key=lambda x: x["price"])
@@ -666,17 +872,25 @@ def build_deploy_bundle(cfg: dict, conn, deploy_dir: str, db_path: str = "") -> 
         flights.append(item)
     flights.sort(key=lambda x: x["price"])
 
-    target_rows = [f for f in flights if f["flight_no"] in watch]
-    target = min(target_rows, key=lambda x: x["price"]) if target_rows else None
-    prices = [float(h["price"]) for h in history]
-
-    # 当日最低价排除"疑似被拼接截断"的假低价（详见 price_guard）
-    _, is_suspect = price_guard(rows)
-    for f in flights:
-        f["price_suspect"] = bool(is_suspect(f["price"]))
-    sane_flights = [f for f in flights if not f["price_suspect"]]
-
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    targets = {s["flight_no"]: {
+        "flight_no": s["flight_no"],
+        "airline": s["airline"],
+        "aircraft": s["aircraft"],
+        "depart_time": s["depart_time"],
+        "arrive_time": s["arrive_time"],
+        "dep_airport": s["dep_airport"],
+        "arr_airport": s["arr_airport"],
+        "price": s["current"],
+        "platform": s["platform"],
+        "min_price": s["min"],
+        "max_price": s["max"],
+        "avg_price": round(s["avg"], 1) if s["avg"] is not None else None,
+        "sample_count": s["samples"],
+        "below_threshold": s["below_threshold"],
+        "cheapest_among_watched": bool(cheapest and s["flight_no"] == cheapest["flight_no"]),
+    } for s in stats}
+
     latest_doc = {
         "generated_at": now,
         "last_fetch": last_fetch,
@@ -685,10 +899,13 @@ def build_deploy_bundle(cfg: dict, conn, deploy_dir: str, db_path: str = "") -> 
                   "from_name": route.get("from_name", ""), "to_name": route.get("to_name", "")},
         "watch_flights": watch,
         "threshold": threshold,
-        "target": target,
-        "cheapest": (sane_flights[0] if sane_flights else (flights[0] if flights else None)),
+        "targets": targets,
+        # 向后兼容：单班次页面/旧调用方按 target 取第一班
+        "target": targets.get(watch[0]) if watch else None,
+        "cheapest_among_watched": (targets.get(cheapest["flight_no"]) if cheapest else None),
+        "cheapest": next((f for f in flights if not f["price_suspect"]),
+                         (flights[0] if flights else None)),
         "flight_count": len(flights),
-        "suspect_price_count": len(flights) - len(sane_flights),
         "flights": flights,
     }
     (d / "latest.json").write_text(json.dumps(latest_doc, ensure_ascii=False, indent=2),
@@ -696,11 +913,14 @@ def build_deploy_bundle(cfg: dict, conn, deploy_dir: str, db_path: str = "") -> 
 
     history_doc = {
         "generated_at": now,
-        "flight": watch[0] if watch else "",
-        "watch_flights": watch,
         "date": date,
-        "sample_count": len(history),
-        "samples": [{"fetched_at": h["fetched_at"], "price": float(h["price"])} for h in history],
+        "watch_flights": watch,
+        "sample_count": st["total_samples"],
+        "series": {fno: [{"fetched_at": p["fetched_at"], "price": p["price"]}
+                         for p in (series.get(fno) or [])] for fno in watch},
+        # 向后兼容：samples 仍是第一班的历史
+        "samples": [{"fetched_at": p["fetched_at"], "price": p["price"]}
+                    for p in (series.get(watch[0]) if watch else []) or []],
     }
     (d / "history.json").write_text(json.dumps(history_doc, ensure_ascii=False, indent=2),
                                     encoding="utf-8")
@@ -708,15 +928,22 @@ def build_deploy_bundle(cfg: dict, conn, deploy_dir: str, db_path: str = "") -> 
     meta = {
         "updated_at": now,
         "last_fetch": last_fetch,
-        "flight": watch[0] if watch else "",
         "date": date,
-        "current_price": target["price"] if target else None,
-        "min_price": min(prices) if prices else None,
-        "max_price": max(prices) if prices else None,
-        "avg_price": round(sum(prices) / len(prices), 1) if prices else None,
-        "sample_count": len(prices),
-        "flight_count": len(flights),
+        "route": {"from": route.get("from", ""), "to": route.get("to", ""),
+                  "from_name": route.get("from_name", ""), "to_name": route.get("to_name", "")},
+        "watch_flights": watch,
         "threshold": threshold,
+        "flight": watch[0] if watch else "",
+        "current_price": (targets.get(watch[0]) or {}).get("price") if watch else None,
+        "min_price": (targets.get(watch[0]) or {}).get("min_price") if watch else None,
+        "max_price": (targets.get(watch[0]) or {}).get("max_price") if watch else None,
+        "avg_price": (targets.get(watch[0]) or {}).get("avg_price") if watch else None,
+        "sample_count": st["total_samples"],
+        "flights": [targets[s["flight_no"]] for s in stats],
+        "cheapest_flight": cheapest["flight_no"] if cheapest else None,
+        "cheapest_price": cheapest["current"] if cheapest else None,
+        "missing_flights": st["missing"],
+        "flight_count": len(flights),
         "source": cfg.get("platforms") or [],
     }
     (d / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2),
@@ -724,7 +951,6 @@ def build_deploy_bundle(cfg: dict, conn, deploy_dir: str, db_path: str = "") -> 
     (d / "_headers").write_text(PAGES_HEADERS, encoding="utf-8")
 
     return {"deploy_dir": str(d), "meta": meta, "files": sorted(p.name for p in d.iterdir())}
-
 
 def main():
     ap = argparse.ArgumentParser(description="生成机票监控 HTML 报告")
