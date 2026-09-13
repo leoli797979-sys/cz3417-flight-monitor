@@ -189,24 +189,48 @@ powershell -ExecutionPolicy Bypass -File .\install_task.ps1 -Uninstall          
 
 ### 公开地址（均已验证可用）
 
-| 用途 | Cloudflare Pages（主） | GitHub Pages（备） |
-|---|---|---|
-| 报告页面 | https://cz3417-monitor.pages.dev/ | https://leoli797979-sys.github.io/cz3417-flight-monitor/ |
-| 摘要 | `/meta.json` | 同路径 |
-| 价格历史 | `/history.json` | 同路径 |
-| 最新一轮全部航班 | `/latest.json` | 同路径 |
+本项目现在有**两个独立监控页面**（各自独立的班次清单、版面与配置）：
 
-两个地址都是**电脑关机后照样能打开**的（页面托管在 Cloudflare / GitHub 的服务器上，与本机无关）。
+| 页面 | Cloudflare Pages（主） | GitHub Pages（备） | 监控班次 |
+|---|---|---|---|
+| CZ3417 | https://cz3417-monitor.pages.dev/ | https://leoli797979-sys.github.io/cz3417-flight-monitor/ | CZ3417（15:15→17:35） |
+| **晚间 5 班** | **https://can-ctu-evening.pages.dev/** | .../cz3417-flight-monitor/w5/ | 3U8736 · 3U1149 · MF1192 · CZ3413 · CZ9088 |
+
+每个页面都提供同路径的机器可读接口：
+
+| 用途 | 路径 |
+|---|---|
+| 摘要（各班次当前价/区间/样本数/更新时间） | `/meta.json` |
+| 各班次价格历史序列 | `/history.json` |
+| 最近一轮全部航班 + 各班次当前价 | `/latest.json` |
+
+这些地址在**电脑关机后照样能打开**（页面托管在 Cloudflare / GitHub 的服务器上，与本机无关）。
 页面内含查询框（搜索/排序/过滤），JSON 接口供外部程序查询。
 
-* **Cloudflare Pages**：由本机每轮抓取后自动重新发布（`config.yaml` 里 `publish.enabled: true`），
+* **Cloudflare Pages**：由本机每轮抓取后自动重新发布，
   `Cache-Control: public, max-age=60`，所以更新后约 1 分钟内可见。
-* **GitHub Pages**：本机推送 `data/prices.db` 后由 `publish.yml` 自动渲染发布。
+  发布节流状态**按项目分开存**（`.last-publish.<项目名>.json`）——早期两页共用一个状态文件时，
+  互相覆盖"上次发布价"会让节流误判为"价格变了"而失效。
+* **GitHub Pages**：本机推送 `data/prices.db` 后由 `publish.yml` 自动渲染发布；
+  该工作流会同时构建两个页面（晚间 5 班挂在 `/w5/` 子路径下）。
 
 > 授权踩坑记录：Cloudflare 的 `wrangler login` 走 localhost 回调且只给约 2 分钟窗口。
 > 本机**默认浏览器无法正常打开该授权页**，导致连续三次超时；
 > 改用 Firefox 显式打开授权链接后一次成功（`firefox.exe "<授权URL>"`）。
 > 凭据存放在 `%APPDATA%\xdg.config\.wrangler\config\default.toml`。
+
+### 新增一个监控页面要做什么
+
+1. 复制一份配置，例如 `config.w5.yaml`：改 `watch_flights`、`output.report_html`、
+   `output.deploy_dir`、`publish.project`，**时间窗留空**（按航班号匹配即可，
+   留成别的班次的时刻窗会把目标班次过滤掉——这个坑踩过）。
+2. `python report.py -c config.w5.yaml --deploy-dir deploy-w5` → 生成页面
+3. `python publish.py -c config.w5.yaml` → 第一次会自动创建 Cloudflare Pages 项目并发布
+4. 在 `run_monitor.ps1` 的 `Publish-SecondPage` 旁边照样加一个函数调用，
+   或在 `publish.yml` 里加一个构建步骤（挂到新子路径）
+
+**不需要额外抓取**：抓取是按航线取全部航班的，新页面只是"换个班次清单重新渲染"，
+零额外请求、零额外配额。
 
 ### 架构：本机抓取 + 双通道发布
 
