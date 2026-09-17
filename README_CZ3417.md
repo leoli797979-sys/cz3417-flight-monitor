@@ -46,6 +46,13 @@
 | `show.py` | **新增**。查历史价格与统计（读 SQLite） |
 | `probe_qunar.py` / `verify_real.py` | **新增**。诊断/离线复验脚本（对已存原始响应跑解析器） |
 | `tests/test_flights.py` | **新增**。45 项自测，含真实结构回归 |
+| `config.w5.yaml` / `config.ctucan.yaml` | **新增**。晚间 5 班页 / 成都→广州页的独立报告配置 |
+| `crawlers/base.py` | 反检测脚本提到基类 `MOBILE_STEALTH_JS`，所有移动端爬虫共用（携程 Whale Guard 会查这些破绽） |
+| `solve_ctrip.py` | **新增**。交互式过一次携程拼图验证，过关后信任会话存入 `user_data/ctrip` |
+| `probe_ctrip.py` | **新增**。单独测试携程爬虫（诊断，不写库） |
+| `scripts/check_flights.py` | **新增**。命令行查指定班次的当前价与历史 |
+| `scripts/probe_report.py` / `probe-sources.yml` | **新增**。各数据源"云端可用性"探测与汇总 |
+| `scripts/check_source_badge.py` | **新增**。校验页面"数据源状态"是否渲染成徽标 |
 
 ## 四、去哪儿响应的三个坑（都是实测踩出来的）
 
@@ -185,6 +192,46 @@ powershell -ExecutionPolicy Bypass -File .\install_task.ps1 -Uninstall          
 
 > 注：`LastTaskResult` 含义 —— `0` 成功，`1` 脚本报错，`267011` 表示尚未运行过。
 
+## 九、携程数据源现状（暂缓，附开启方法）
+
+**结论：携程的航班列表接口目前在风控拦截下拿不到数据，页面会如实标注 `ctrip 本轮无数据`。**
+
+实测证据（`debug/ctrip_xhr_*.txt` 只有 186 字节）：
+
+```
+https://m.ctrip.com/restapi/soa2/14488/flightListSearchForH5?...
+whaleguard block
+```
+
+页面快照里是拼图验证墙（"请完成以下验证：依次点击图标验证 / 滑动将展现拼图"）。
+这类验证靠改指纹过不去，必须真人过一次。
+
+已经做过的尝试（**均未通过**，留着以后继续）：
+
+* 指纹伪装提到基类：清掉 iPhone UA 下不该存在的 `navigator.userAgentData` /
+  `connection` / `deviceMemory`，WebGL 伪装成 Apple GPU，plugins/mimeTypes 置空
+* 列表页之前先访问机票首页"预热"，建立访客 cookie
+* 有头 / 无头两种模式都试过；等待窗放宽到 12 秒 + 6 次滚动
+* 风控识别：命中时明确打出 `被风控拦截：接口返回风控: whaleguard block`
+
+顺带一个交叉印证：携程**跨日期低价日历没有被拦**，它显示广州→成都 09-22 最低 ¥360，
+与去哪儿抓到的航线最低价一致 —— 说明去哪儿的数据可信。
+
+**以后要启用携程**（两条路，任选其一）：
+
+```powershell
+# 路线 A：过一次拼图（不需要携程账号）
+.\.venv\Scripts\python.exe solve_ctrip.py --from CTU --to CAN --date 2026-09-27 --wait 300
+#   弹出可见浏览器 -> 手动滑动拼图 -> 脚本每 5 秒检测，拿到数据即保存会话到 user_data/ctrip
+#   之后 python probe_ctrip.py --from CTU --to CAN --date 2026-09-27 可验证无头模式能否复用
+
+# 路线 B：用携程账号登录（登录态通常能绕过拼图）
+.\.venv\Scripts\python.exe main.py --login ctrip
+```
+
+成功之后不需要改任何代码：`config.yaml` / `config.ctucan.yaml` 的 `platforms` 里
+本来就写着 `ctrip`，会话一旦有效，每轮抓取就会自动多出携程的价格。
+
 ## 十、外链部署与"关机可访问"的真实边界
 
 ### 公开地址（均已验证可用）
@@ -193,8 +240,9 @@ powershell -ExecutionPolicy Bypass -File .\install_task.ps1 -Uninstall          
 
 | 页面 | Cloudflare Pages（主） | GitHub Pages（备） | 监控班次 |
 |---|---|---|---|
-| CZ3417 | https://cz3417-monitor.pages.dev/ | https://leoli797979-sys.github.io/cz3417-flight-monitor/ | CZ3417（15:15→17:35） |
+| CZ3417 | https://cz3417-monitor.pages.dev/ | https://leoli797979-sys.github.io/cz3417-flight-monitor/ | CZ3417（15:15→17:35，09-22） |
 | **晚间 5 班** | **https://can-ctu-evening.pages.dev/** | .../cz3417-flight-monitor/w5/ | 3U8736 · 3U1149 · MF1192 · CZ3413 · CZ9088 |
+| **成都→广州** | **https://ctu-can-monitor.pages.dev/** | .../cz3417-flight-monitor/ctucan/ | CZ3444 · 3U8729（15:00/15:05→17:30，09-27） |
 
 每个页面都提供同路径的机器可读接口：
 
