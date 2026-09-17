@@ -185,6 +185,19 @@ class QunarCrawler(BaseCrawler):
         if not token:
             return None
 
+        # 主动换新令牌：实测（61 轮日志统计）直连成功率与令牌年龄强相关 ——
+        # 30~90 分钟最高（95%），超过 1.5 小时骤降到 20%，超过 5 小时 0%。
+        # 所以宁可提前用浏览器握手换一个新令牌，也不要拿快过期的令牌去撞 1999
+        # （撞了之后同轮的兜底还只有 22% 能救回来）。
+        max_age_min = int(self.config.get("token_max_age_minutes", 60) or 0)
+        if max_age_min > 0:
+            age_s = time.time() - float(token.get("updated_at", 0) or 0)
+            if age_s > max_age_min * 60:
+                self.logger.info(
+                    "[qunar] 缓存 token 已用 %.0f 分钟（阈值 %d 分钟），主动走浏览器握手换新",
+                    age_s / 60, max_age_min)
+                return None
+
         fc, tc = from_city.upper(), to_city.upper()
         from_name = self.CITY_NAME.get(fc, from_city)
         to_name = self.CITY_NAME.get(tc, to_city)

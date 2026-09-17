@@ -556,9 +556,13 @@ def build_html(cfg: dict, conn, out_path: str) -> str:
             age = (datetime.now() - datetime.strptime(
                 last_fetch, "%Y-%m-%d %H:%M:%S")).total_seconds() / 60
             interval = float((cfg.get("schedule") or {}).get("interval_minutes", 90) or 90)
-            if age > interval * 3:
+            # 阈值取 max(3×间隔, 240 分钟)：抓取本身约有一半轮次会被风控拦掉，
+            # 用 3×间隔 判"任务停了"在 30 分钟节奏下会误报（90 分钟没数据很常见）。
+            limit = max(interval * 3, 240)
+            if age > limit:
                 stale = (f'<div class="banner">⚠️ 最近一次抓取是 {age:.0f} 分钟前'
-                         f'（配置间隔 {interval:.0f} 分钟），定时任务可能已停止或持续抓取失败，'
+                         f'（配置间隔 {interval:.0f} 分钟，告警阈值 {limit:.0f} 分钟），'
+                         f'定时任务可能已停止或持续抓取失败，'
                          f'请检查计划任务与 <code>logs/monitor.log</code>。</div>')
         except Exception:
             pass
