@@ -141,6 +141,10 @@ class BaseCrawler:
                     "--disable-blink-features=AutomationControlled",
                     "--no-sandbox",
                     "--disable-dev-shm-usage",
+                    # 无头模式下渲染进程崩溃（Page crashed）几乎都出在 GPU/ANGLE 初始化，
+                    # 关掉 GPU 后实测未再复现；手机端用例不受影响，因为 WebGL 指纹
+                    # 由 MOBILE_STEALTH_JS 直接改写 getParameter 返回值。
+                    "--disable-gpu",
                 ],
             )
             ctx.add_init_script(

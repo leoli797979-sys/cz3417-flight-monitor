@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-09-17 22:26:33",
-  "last_fetch": "2026-09-17 22:25:51",
+  "updated_at": "2026-09-17 23:26:22",
+  "last_fetch": "2026-09-17 23:25:37",
   "date": "2026-09-27",
   "route": {
     "from": "CTU",
@@ -18,7 +18,7 @@
   "min_price": 770.0,
   "max_price": 770.0,
   "avg_price": 770.0,
-  "sample_count": 7,
+  "sample_count": 11,
   "flights": [
     {
       "flight_no": "CZ3444",
@@ -26,14 +26,14 @@
       "aircraft": "空客320(中)",
       "depart_time": "15:00",
       "arrive_time": "17:30",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
+      "dep_airport": "",
+      "arr_airport": "",
       "price": 770.0,
-      "platform": "qunar",
+      "platform": "ctrip",
       "min_price": 770.0,
       "max_price": 770.0,
       "avg_price": 770.0,
-      "sample_count": 7,
+      "sample_count": 11,
       "below_threshold": false,
       "cheapest_among_watched": true
     },
@@ -43,14 +43,14 @@
       "aircraft": "空客320(中)",
       "depart_time": "15:05",
       "arrive_time": "17:30",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
+      "dep_airport": "",
+      "arr_airport": "",
       "price": 860.0,
-      "platform": "qunar",
+      "platform": "ctrip",
       "min_price": 860.0,
       "max_price": 860.0,
       "avg_price": 860.0,
-      "sample_count": 7,
+      "sample_count": 11,
       "below_threshold": false,
       "cheapest_among_watched": false
     }

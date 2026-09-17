@@ -61,16 +61,53 @@ def build_routes(cfg: dict):
     return routes
 
 
+def refresh_report_and_publish(cfg: dict, logger, storage: PriceStorage,
+                               config_path: str) -> None:
+    """用库里已有数据重刷 HTML 报告并发布到 Cloudflare。
+
+    为什么单独抽成一个函数：轮次可能被看门狗强杀（实测过一次：携程页面崩溃后
+    Playwright 关闭浏览器卡死，整轮挂住直到被系统终止，报告没刷新、快照也没推送，
+    外部网页就一直停在旧数据）。那种情况下定时任务会再用
+    ``main.py --report-only`` 调一次这里，把网页补上。
+    """
+    out_cfg = cfg.get("output") or {}
+    report_html = out_cfg.get("report_html", "")
+    pub_cfg = cfg.get("publish") or {}
+    project_root = Path(__file__).resolve().parent
+
+    if report_html:
+        try:
+            from report import build_report
+            path = build_report(storage.db_path, report_html, cfg)
+            logger.info("HTML 报告已刷新: %s", path)
+        except Exception as e:
+            logger.warning("刷新 HTML 报告失败: %s", e)
+
+    # 发布到 Cloudflare Pages：让外部链接始终是最新快照（失败不影响抓取）
+    if bool(pub_cfg.get("enabled")):
+        try:
+            proc = subprocess.run(
+                [sys.executable, "publish.py", "-q", "-c", config_path],
+                cwd=str(project_root),
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                text=True, encoding="utf-8", errors="replace", timeout=420)
+            tail = [ln for ln in (proc.stdout or "").strip().splitlines() if ln.strip()]
+            # publish.py 的结论行不带缩进，取它比取最后一行更清楚
+            summary = next((ln for ln in reversed(tail) if not ln.startswith("  ")),
+                           tail[-1] if tail else "")
+            if proc.returncode == 0:
+                logger.info("Cloudflare 发布: %s", summary)
+            else:
+                logger.warning("发布到 Cloudflare 失败(码 %s): %s", proc.returncode, summary)
+        except Exception as e:
+            logger.warning("发布到 Cloudflare 异常: %s", e)
+
+
 def make_job(cfg: dict, logger, storage: PriceStorage, alerter: Alerter,
              config_path: str = "config.yaml"):
     crawler_cfg = cfg.get("crawler", {})
     platforms = cfg.get("platforms", ["ctrip", "fliggy", "tongcheng"])
     routes = build_routes(cfg)
-    out_cfg = cfg.get("output") or {}
-    report_html = out_cfg.get("report_html", "")
-    pub_cfg = cfg.get("publish") or {}
-    publish_enabled = bool(pub_cfg.get("enabled"))
-    project_root = Path(__file__).resolve().parent
     # 航向之间的间隔。为什么需要：去哪儿 touchInnerList 有全局限流（约 5 分钟/次），
     # 同一轮里隔几秒连发两次请求，第二次基本必被 1999 拦截。
     # 注意这里是「上一个航向抓完之后」再等，所以实际间隔恒 >= 该值，
@@ -99,33 +136,8 @@ def make_job(cfg: dict, logger, storage: PriceStorage, alerter: Alerter,
             alerter.check_and_alert(route, all_prices)
         logger.info("===== 本轮抓取结束 =====")
 
-        # 每轮结束后刷新 HTML 报告（定时任务下报告自动保持最新）
-        if report_html:
-            try:
-                from report import build_report
-                path = build_report(storage.db_path, report_html, cfg)
-                logger.info("HTML 报告已刷新: %s", path)
-            except Exception as e:
-                logger.warning("刷新 HTML 报告失败: %s", e)
-
-        # 发布到 Cloudflare Pages：让外部链接始终是最新快照（失败不影响抓取）
-        if publish_enabled:
-            try:
-                proc = subprocess.run(
-                    [sys.executable, "publish.py", "-q", "-c", config_path],
-                    cwd=str(project_root),
-                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                    text=True, encoding="utf-8", errors="replace", timeout=420)
-                tail = [ln for ln in (proc.stdout or "").strip().splitlines() if ln.strip()]
-                # publish.py 的结论行不带缩进，取它比取最后一行更清楚
-                summary = next((ln for ln in reversed(tail) if not ln.startswith("  ")),
-                               tail[-1] if tail else "")
-                if proc.returncode == 0:
-                    logger.info("Cloudflare 发布: %s", summary)
-                else:
-                    logger.warning("发布到 Cloudflare 失败(码 %s): %s", proc.returncode, summary)
-            except Exception as e:
-                logger.warning("发布到 Cloudflare 异常: %s", e)
+        # 每轮结束后刷新 HTML 报告并发布（定时任务下外部链接自动保持最新）
+        refresh_report_and_publish(cfg, logger, storage, config_path)
 
     return job
 
@@ -137,6 +149,8 @@ def main():
     ap.add_argument("--headless", action="store_true",
                     help="强制无头浏览器（无人值守定时任务用，不弹窗口）")
     ap.add_argument("--no-report", action="store_true", help="本轮结束后不刷新 HTML 报告")
+    ap.add_argument("--report-only", action="store_true",
+                    help="不抓取，直接用库里已有数据重刷报告并发布（轮次被看门狗强杀后补网页用）")
     ap.add_argument("--login", metavar="PLATFORM",
                     help="登录指定平台(ctrip/fliggy/tongcheng)，弹出可见浏览器，登录完成后回车保存会话")
     args = ap.parse_args()
@@ -175,6 +189,12 @@ def main():
             sys.exit(2)
         crawler = cls(cfg.get("crawler", {}), logger)
         crawler.interactive_login()
+        return
+
+    # ---- 只补报告/发布（不抓取）----
+    if args.report_only:
+        logger.info("===== 仅重刷报告并发布（不抓取）=====")
+        refresh_report_and_publish(cfg, logger, storage, args.config)
         return
 
     job = make_job(cfg, logger, storage, alerter, args.config)

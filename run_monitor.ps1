@@ -19,7 +19,8 @@ param(
     [int]$MaxLogKB = 2048,
     [switch]$SleepAfter,                # put the machine back to sleep when the round is done
     [int]$IdleMinutes = 10,             # ...but only if nobody has touched the machine for this long
-    [switch]$DryRunSleep                # log the sleep decision without actually sleeping (for testing)
+    [switch]$DryRunSleep,               # log the sleep decision without actually sleeping (for testing)
+    [int]$RoundTimeoutMinutes = 12      # watchdog: kill the round (python + chromium) if it runs longer
 )
 
 $ErrorActionPreference = "Continue"
@@ -126,13 +127,19 @@ function Publish-Snapshot {
         commit -q -m ("data: price snapshot " + $stamp) 2>&1 | ForEach-Object { Write-Log ("  " + $_) }
 
     # Remote may have moved (cloud workflow commits the DB too) - rebase first.
-    & $git pull --rebase --autostash -q mine main 2>&1 | ForEach-Object { Write-Log ("  " + $_) }
-    & $git push -q mine main 2>&1 | ForEach-Object { Write-Log ("  " + $_) }
-    if ($LASTEXITCODE -eq 0) {
-        Write-Log "pushed snapshot - GitHub Pages will republish"
-    } else {
-        Write-Log "push failed (network?) - will retry next round"
+    # This machine's route to github.com is flaky (connection resets, only a couple of the
+    # anycast IPs answer), so a single push attempt fails often enough to matter: retry.
+    for ($try = 1; $try -le 3; $try++) {
+        & $git pull --rebase --autostash -q mine main 2>&1 | ForEach-Object { Write-Log ("  " + $_) }
+        & $git push -q mine main 2>&1 | ForEach-Object { Write-Log ("  " + $_) }
+        if ($LASTEXITCODE -eq 0) {
+            Write-Log ("pushed snapshot (attempt {0}) - GitHub Pages will republish" -f $try)
+            return
+        }
+        Write-Log ("push attempt {0} failed - retrying" -f $try)
+        Start-Sleep -Seconds (5 * $try)
     }
+    Write-Log "push failed after 3 attempts (network?) - next round will retry"
 }
 
 function Publish-ExtraPages {
@@ -176,9 +183,39 @@ try {
     Remove-Item $tmpOut, $tmpErr -ErrorAction SilentlyContinue
 
     $proc = Start-Process -FilePath $py -ArgumentList $pyArgs `
-        -WorkingDirectory $root -NoNewWindow -PassThru -Wait `
+        -WorkingDirectory $root -NoNewWindow -PassThru `
         -RedirectStandardOutput $tmpOut -RedirectStandardError $tmpErr
-    $code = $proc.ExitCode
+
+    # Start-Process -PassThru hands back a Process object with no cached exit code, so
+    # $proc.ExitCode stays empty even after WaitForExit() - the log then reads
+    # "round done, exit code " with nothing after it, which hides real failures.
+    # Raising events makes PowerShell hold the process handle, which fixes both HasExited
+    # and ExitCode.
+    $proc.EnableRaisingEvents = $true
+
+    # Watchdog: a round must never hang forever.
+    # Seen for real on 2026-09-17 22:53: the ctrip page crashed ("Page crashed"), Playwright
+    # then blocked while closing the dead browser context, and the round sat there until the
+    # scheduled task's 30-minute execution limit killed it. The report was never refreshed and
+    # no snapshot was pushed, so the public page silently kept showing old data.
+    $deadline = (Get-Date).AddMinutes($RoundTimeoutMinutes)
+    $timedOut = $false
+    while (-not $proc.HasExited) {
+        if ((Get-Date) -gt $deadline) { $timedOut = $true; break }
+        Start-Sleep -Seconds 3
+        $proc.Refresh()
+    }
+
+    if ($timedOut) {
+        Write-Log ("WATCHDOG: round exceeded {0} min - killing the process tree (pid {1})" -f $RoundTimeoutMinutes, $proc.Id)
+        & taskkill.exe /F /T /PID $proc.Id 2>&1 | ForEach-Object { Write-Log ("  " + $_) }
+        Start-Sleep -Seconds 2
+        $code = 9999
+    } else {
+        # ExitCode is only readable once the process has been waited on.
+        $proc.WaitForExit()
+        if ($null -eq $proc.ExitCode) { $code = "unknown" } else { $code = $proc.ExitCode }
+    }
 
     foreach ($f in @($tmpOut, $tmpErr)) {
         if (Test-Path $f) {
@@ -188,13 +225,34 @@ try {
     Remove-Item $tmpOut, $tmpErr -ErrorAction SilentlyContinue
     Write-Log ("===== round done, exit code {0} =====" -f $code)
 
+    # A killed round never reached the report/publish step, but everything it scraped is
+    # already committed to the DB - so rebuild the report from the DB and publish that.
+    if ($timedOut) {
+        Write-Log "watchdog recovery: rebuilding report + publishing from the existing DB"
+        $recOut = Join-Path $logDir "task.recover.out.tmp"
+        $recErr = Join-Path $logDir "task.recover.err.tmp"
+        Remove-Item $recOut, $recErr -ErrorAction SilentlyContinue
+        $rec = Start-Process -FilePath $py -ArgumentList @("main.py", "-c", $Config, "--report-only") `
+            -WorkingDirectory $root -NoNewWindow -PassThru -Wait `
+            -RedirectStandardOutput $recOut -RedirectStandardError $recErr
+        foreach ($f in @($recOut, $recErr)) {
+            if (Test-Path $f) {
+                Get-Content -Path $f -Encoding UTF8 | ForEach-Object { Write-Log ("  " + $_) }
+            }
+        }
+        Remove-Item $recOut, $recErr -ErrorAction SilentlyContinue
+        Write-Log ("watchdog recovery exit code {0}" -f $rec.ExitCode)
+    }
+
     # Push the fresh snapshot so the cloud can render + publish it.
     # Publishing itself is done by .github/workflows/publish.yml (triggered by this push):
     # cloud-side scraping is impossible because qunar redirects datacenter IPs to a login page.
-    if ($code -eq 0) { Publish-Snapshot }
+    # Always attempt it (Publish-Snapshot no-ops when the DB did not change) so that even a
+    # failed or watchdog-killed round still gets its already-saved rows onto the web page.
+    Publish-Snapshot
 
     # Re-render + publish the extra monitoring pages (same DB, no extra scraping).
-    if ($code -eq 0) { Publish-ExtraPages }
+    Publish-ExtraPages
 
     # Scheduled runs wake the machine; send it back to sleep when nobody is around.
     if ($SleepAfter) { Invoke-IdleSleep -IdleMinutes $IdleMinutes -DryRun:$DryRunSleep }

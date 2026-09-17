@@ -178,6 +178,46 @@ def connect(db_path: str) -> sqlite3.Connection:
     return conn
 
 
+def backfill_times(conn, rows: list) -> None:
+    """就地补齐缺失的起降时刻（只补展示用的时刻，不碰价格）。
+
+    为什么需要：去哪儿返回的报文被反爬掺了假（键名粘连、字符缺失、截断），按 ``binfo``
+    切行的解析偶尔拿不到 ``depTime``/``arrTime`` —— 实测 2026-09-17 23:20 那一轮
+    116 行里有 27 行缺时刻，恰好包含用户盯的 CZ3444/3U8729。价格不受影响，但页面展示
+    时刻时取的是"本轮最便宜那一行"，缺了就渲染成 ``--:--``，看起来像是航班信息丢了。
+    班次的起降时刻是静态属性，用该班次最近一次解析成功的值补上即可；一旦新数据里带了
+    时刻，补的值会被自然覆盖，不会掩盖真正的航班时刻变动。
+    """
+    if not rows:
+        return
+    cache: dict = {}
+    for r in rows:
+        dep = (r.get("depart_time") or "").strip()
+        arr = (r.get("arrive_time") or "").strip()
+        if dep and arr:
+            continue
+        fno = (r.get("flight_no") or "").upper().replace(" ", "")
+        if not fno:
+            continue
+        key = (fno, r.get("depart_date") or "")
+        if key not in cache:
+            hit = conn.execute(
+                "SELECT "
+                " (SELECT depart_time FROM flight_prices "
+                "   WHERE UPPER(REPLACE(flight_no,' ',''))=? AND depart_date=? "
+                "     AND depart_time<>'' ORDER BY fetched_at DESC LIMIT 1) AS d, "
+                " (SELECT arrive_time FROM flight_prices "
+                "   WHERE UPPER(REPLACE(flight_no,' ',''))=? AND depart_date=? "
+                "     AND arrive_time<>'' ORDER BY fetched_at DESC LIMIT 1) AS a",
+                (fno, key[1], fno, key[1])).fetchone()
+            cache[key] = dict(hit) if hit else {}
+        known = cache[key]
+        if not dep:
+            r["depart_time"] = known.get("d") or ""
+        if not arr:
+            r["arrive_time"] = known.get("a") or ""
+
+
 def latest_round_rows(conn, window_minutes: int = 3,
                       from_code: str = "", to_code: str = "") -> tuple:
     """取指定航向"最近一轮"的记录。
@@ -211,7 +251,9 @@ def latest_round_rows(conn, window_minutes: int = 3,
         args.append(to_code.upper())
     sql += " ORDER BY price ASC"
     rows = conn.execute(sql, args).fetchall()
-    return [dict(r) for r in rows], mx
+    out = [dict(r) for r in rows]
+    backfill_times(conn, out)
+    return out, mx
 
 
 def target_history(conn, flights: list, date: str) -> list:

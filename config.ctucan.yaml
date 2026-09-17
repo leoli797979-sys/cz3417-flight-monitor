@@ -67,8 +67,13 @@ publish:
   enabled: true
   provider: cloudflare-pages
   project: ctu-can-monitor
-  min_interval_minutes: 180
-  max_per_day: 12
+  # Cloudflare Pages 免费版限 500 次部署/月 ≈ 每天 16 次。
+  # 价格没变时最短间隔 60 分钟、每天最多 14 次 -> 最多约 420 次/月，仍留有余量。
+  # （曾用 180 分钟：实测页面会落后好几轮，看起来像"没在更新"；90 分钟也偏松。
+  #   价格真正变动时这两个限制都不拦，会立刻发布。
+  #   要更实时就看 GitHub Pages 那一路：每轮数据推送都会重建，无额度限制。）
+  min_interval_minutes: 60
+  max_per_day: 14
 
 notifier:
   push_drop_min: 30
