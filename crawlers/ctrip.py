@@ -32,6 +32,10 @@ class CtripCrawler(BaseCrawler):
         "flightListSearchForH5",
     ]
 
+    # 机票首页：先走一次"热身"建立 cookie 与访客标识，
+    # 直接打列表页会被 Whale Guard 判为机器流量（实测接口返回纯文本 "whaleguard block"）
+    HOME_URL = "https://m.ctrip.com/html5/flight/"
+
     CITY_NAME = {
         "SZX": "深圳", "KMG": "昆明", "PEK": "北京", "BJS": "北京",
         "SHA": "上海", "PVG": "上海", "CAN": "广州", "HGH": "杭州",
@@ -44,10 +48,40 @@ class CtripCrawler(BaseCrawler):
     def login_url(self) -> str:
         return "https://m.ctrip.com/webapp/passenger/login"
 
+    @staticmethod
+    def _detect_block(captured: list, page=None) -> str:
+        """识别携程风控拦截。
+
+        实测被拦时列表接口返回的正文就是纯文本 ``whaleguard block``，
+        同时页面会渲染成验证码墙（HTML 里出现 captcha）。
+        """
+        for item in captured:
+            text = (item.get("text") or "").strip()
+            low = text[:400].lower()
+            if "whaleguard" in low:
+                return f"接口返回风控: {text[:60]}"
+            if len(text) < 200 and "block" in low:
+                return f"接口返回: {text[:60]}"
+        try:
+            html = (page.content() if page is not None else "") or ""
+        except Exception:
+            html = ""
+        if "captcha" in html.lower():
+            return "页面出现验证码墙(captcha)"
+        return ""
+
     def fetch(self, from_city: str, to_city: str, dates: List[str]) -> List[FlightPrice]:
         results: List[FlightPrice] = []
         with self.browser() as ctx:
             page = self.new_page(ctx)
+            # 热身：先访问机票首页，拿到访客 cookie 再去列表页
+            try:
+                self.logger.info("[ctrip] 预热访问 %s", self.HOME_URL)
+                page.goto(self.HOME_URL, wait_until="domcontentloaded")
+                page.wait_for_timeout(4000)
+            except Exception as e:
+                self.logger.warning("[ctrip] 预热失败(继续尝试): %s", e)
+
             for date in dates:
                 url = self.URL_TPL.format(
                     from_city=from_city.upper(),
@@ -60,18 +94,27 @@ class CtripCrawler(BaseCrawler):
                 captured = self.attach_xhr_collector(page, self.XHR_KEYS)
                 try:
                     page.goto(url, wait_until="domcontentloaded")
-                    page.wait_for_timeout(8000)
-                    for _ in range(4):
+                    # 携程 H5 是 SPA，冷启动 + 风控校验比去哪儿更慢，窗口给足
+                    page.wait_for_timeout(12000)
+                    for _ in range(6):
                         try:
                             page.mouse.wheel(0, 2000)
                         except Exception:
                             pass
-                        page.wait_for_timeout(1200)
+                        page.wait_for_timeout(1500)
 
                     flights = []
                     for item in captured:
                         flights.extend(self._extract_ctrip_flights(item.get("text", "")))
                     self._dump_xhr(captured, f"ctrip_xhr_{date}")
+
+                    blocked = self._detect_block(captured, page)
+                    if blocked:
+                        self.logger.warning(
+                            "[ctrip] %s 被风控拦截：%s —— 需要登录会话或更换网络出口。"
+                            "可用 python main.py --login ctrip 登录一次以保存会话。",
+                            date, blocked)
+                        self._debug_snapshot(page, f"blocked_{date}")
 
                     if flights:
                         # 按航班号归并（同一航班多条政策 → 取最低有票价）

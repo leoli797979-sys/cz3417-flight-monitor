@@ -1,0 +1,73 @@
+# ==========================================================================
+# 「成都 → 广州 09-27」监控配置（独立页面，数据源：携程 + 去哪儿）
+#
+# 监控 2 个班次（2026-09-27 成都双流 → 广州白云）：
+#   CZ3444  南航  15:00 → 17:30   ¥770
+#   3U8729  川航  15:05 → 17:30   ¥860
+#
+# 说明：
+#   * 抓取由主配置 config.yaml 里同航向的路由完成（一次抓取服务所有页面），
+#     本文件只负责"渲染 + 发布"，因此 publish.enabled 保持 false。
+#   * 时间窗留空：按航班号精确匹配。
+#   * 数据源按你的要求同时取携程与去哪儿。携程有 Whale Guard 风控，
+#     需要先过一次人机验证（见 solve_ctrip.py），过完会话会保存在
+#     user_data/ctrip 里，之后自动复用。
+# ==========================================================================
+
+routes:
+  - from: CTU
+    from_name: 成都
+    to: CAN
+    to_name: 广州
+    dates:
+      - "2026-09-27"
+    watch_flights:
+      - CZ3444
+      - 3U8729
+    depart_time_from: ""
+    depart_time_to: ""
+    # 这两班现价 ¥770/¥860，低于 700 才算真便宜
+    alert_threshold: 700
+
+platforms:
+  - qunar
+  - ctrip
+
+schedule:
+  interval_minutes: 90
+  jitter_minutes: 30
+  run_on_start: true
+
+crawler:
+  headless: true
+  timeout_seconds: 45
+  response_wait_seconds: 60
+  delay_min: 5
+  delay_max: 15
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+  mobile_user_agent: ""
+  debug: true
+  debug_dir: debug
+  user_data_dir: user_data
+
+output:
+  db_path: data/prices.db           # 与其它页面共用同一个价格库
+  log_path: logs/monitor.log
+  report_html: report-ctucan.html
+  report_refresh_seconds: 300
+  deploy_dir: deploy-ctucan
+
+publish:
+  enabled: false                    # 由 publish.py -c config.ctucan.yaml 显式发布
+  provider: cloudflare-pages
+  project: ctu-can-monitor
+  min_interval_minutes: 180
+  max_per_day: 12
+
+notifier:
+  push_drop_min: 30
+  push_rise_min: 50
+  serverchan:
+    enabled: false
+    send_key: ""
+    channel: ""

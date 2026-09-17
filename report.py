@@ -103,9 +103,11 @@ code { background: #f6f8fa; padding: 1px 5px; border-radius: 4px; font-size: 12.
 # 页面内查询 UI：纯原生 JS，不依赖任何 CDN/框架（离线、静态托管都可用）
 # 注意：工具栏与脚本必须分开 —— 脚本要放在表格之后执行，否则取不到 #tbl 会静默失效。
 # 用普通字符串常量而不是 f-string —— 里面的 {} 是 JS 语法，放进 f-string 会炸。
-QUERY_TOOLBAR = """
+# {examples} / {arr_label} 由 build_html 按航向填充：成都→广州的页面不该出现
+# "只看到达双流"这种写死给广州→成都的过滤条件（点了永远是空表）。
+QUERY_TOOLBAR_TPL = """
     <div class="toolbar">
-      <input type="search" id="q" placeholder="搜索航班号 / 航司 / 机场 / 时刻，例如 CZ3417、双流、15:15">
+      <input type="search" id="q" placeholder="搜索航班号 / 航司 / 机场 / 时刻，例如 {examples}、15:15">
       <select id="sort">
         <option value="price-asc">价格 低 → 高</option>
         <option value="price-desc">价格 高 → 低</option>
@@ -113,7 +115,7 @@ QUERY_TOOLBAR = """
         <option value="dep-desc">起飞时刻 晚 → 早</option>
       </select>
       <label><input type="checkbox" id="cheap"> 只看已低于阈值</label>
-      <label><input type="checkbox" id="direct"> 只看到达双流 CTU</label>
+      <label><input type="checkbox" id="dest"> {arr_label}</label>
       <span class="cnt" id="cnt"></span>
     </div>
 """
@@ -124,7 +126,7 @@ QUERY_SCRIPT = """
   var q = document.getElementById('q'),
       sort = document.getElementById('sort'),
       cheap = document.getElementById('cheap'),
-      direct = document.getElementById('direct'),
+      dest = document.getElementById('dest'),
       tbody = document.getElementById('tbl'),
       cnt = document.getElementById('cnt');
   if (!tbody) { return; }
@@ -135,7 +137,8 @@ QUERY_SCRIPT = """
     var term = (q.value || '').trim().toLowerCase();
     if (term && tr.innerText.toLowerCase().indexOf(term) < 0) { return false; }
     if (cheap.checked && threshold > 0 && parseFloat(tr.dataset.price) > threshold) { return false; }
-    if (direct.checked && tr.dataset.ctu !== '1') { return false; }
+    // 目的地过滤按航向生成（data-arr=1 表示落在本页的目的地机场）
+    if (dest && dest.checked && tr.dataset.arr !== '1') { return false; }
     return true;
   }
   function apply() {
@@ -158,7 +161,7 @@ QUERY_SCRIPT = """
   }
   q.addEventListener('input', apply);
   cheap.addEventListener('change', apply);
-  direct.addEventListener('change', apply);
+  if (dest) { dest.addEventListener('change', apply); }
   sort.addEventListener('change', function () { sortRows(); apply(); });
   apply();
 })();
@@ -175,15 +178,26 @@ def connect(db_path: str) -> sqlite3.Connection:
     return conn
 
 
-def latest_round_rows(conn, window_minutes: int = 5) -> list:
-    """取最近一轮的记录：以最后一条抓取时间往前 window_minutes 分钟为界。"""
+def latest_round_rows(conn, window_minutes: int = 5,
+                      from_code: str = "", to_code: str = "") -> tuple:
+    """取最近一轮的记录：以最后一条抓取时间往前 window_minutes 分钟为界。
+
+    from_code/to_code 用于**按航向过滤**：同一轮里可能同时抓了广州→成都与成都→广州，
+    不过滤的话"当日全部航班价目"会把两个方向的航班混在一张表里。
+    """
     mx = conn.execute("SELECT MAX(fetched_at) AS m FROM flight_prices").fetchone()["m"]
     if not mx:
-        return []
-    rows = conn.execute(
-        "SELECT * FROM flight_prices WHERE fetched_at >= datetime(?, ?) ORDER BY price ASC",
-        (mx, f"-{window_minutes} minutes"),
-    ).fetchall()
+        return [], None
+    sql = "SELECT * FROM flight_prices WHERE fetched_at >= datetime(?, ?)"
+    args = [mx, f"-{window_minutes} minutes"]
+    if from_code:
+        sql += " AND UPPER(from_city) = ?"
+        args.append(from_code.upper())
+    if to_code:
+        sql += " AND UPPER(to_city) = ?"
+        args.append(to_code.upper())
+    sql += " ORDER BY price ASC"
+    rows = conn.execute(sql, args).fetchall()
     return [dict(r) for r in rows], mx
 
 
@@ -521,7 +535,7 @@ def build_html(cfg: dict, conn, out_path: str) -> str:
     flight_word = "监控班次" if multi else "目标航班"
     primary_label = (watch[0] if watch else "机票")
 
-    latest = latest_round_rows(conn)
+    latest = latest_round_rows(conn, from_code=from_code, to_code=to_code)
     rows, last_fetch = latest if isinstance(latest, tuple) else ([], None)
     series = all_flights_history(conn, watch, date)
     positions = all_positions(conn, watch, date)
@@ -682,7 +696,7 @@ def build_html(cfg: dict, conn, out_path: str) -> str:
             arr_id = (json.loads(best.get("extra") or "{}").get("arr_airport_id") or "").upper()
         except Exception:
             arr_id = ""
-        table_rows.append((best["price"], f"""<tr class="{'target' if is_watched else ''}" data-price="{float(best['price']):.0f}" data-dep="{html.escape(best.get('depart_time') or '')}" data-ctu="{1 if arr_id == 'CTU' else 0}">
+        table_rows.append((best["price"], f"""<tr class="{'target' if is_watched else ''}" data-price="{float(best['price']):.0f}" data-dep="{html.escape(best.get('depart_time') or '')}" data-arr="{1 if arr_id == to_code.upper() else 0}">
       <td class="mono">{html.escape(key)}</td>
       <td>{html.escape(best.get('airline') or '')}</td>
       <td>{html.escape(_aircraft_of(best))}</td>
@@ -734,6 +748,25 @@ def build_html(cfg: dict, conn, out_path: str) -> str:
     </table></div>
   </section>"""
 
+    # ---- 数据源实际状态：配置里写了"携程+去哪儿"，但某个源本轮可能没数据
+    #      （携程有 Whale Guard 风控，未过人机验证时会返回 whaleguard block）。
+    #      页面必须如实呈现，不能让读者以为两边的价都拿到了。
+    configured = list(cfg.get("platforms") or [])
+    present: dict = {}
+    for r in rows:
+        present[r.get("platform", "?")] = present.get(r.get("platform", "?"), 0) + 1
+    plat_bits = []
+    for p in configured:
+        n = present.get(p, 0)
+        if n:
+            plat_bits.append(f'{html.escape(p)} <span class="badge ok">有效 {n} 条</span>')
+        else:
+            plat_bits.append(f'{html.escape(p)} <span class="badge warn">本轮无数据</span>')
+    extra = [p for p in present if p not in configured]
+    for p in extra:
+        plat_bits.append(f'{html.escape(p)} <span class="badge info">{present[p]} 条</span>')
+    source_state = " · ".join(plat_bits) or "—"
+
     refresh_tag = (f'<meta http-equiv="refresh" content="{refresh}">' if refresh > 0 else "")
     refresh_note = f"页面每 {refresh} 秒自动刷新" if refresh > 0 else "自动刷新已关闭"
     gen_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -758,7 +791,7 @@ def build_html(cfg: dict, conn, out_path: str) -> str:
     <p class="sub">{html.escape(' · '.join(watch)) if watch else '—'} · {html.escape(date)} ·
       共 {len(watch)} 个{flight_word}</p>
     <p class="meta">生成时间 {html.escape(gen_at)} · 最近抓取 {html.escape(last_fetch or '—')} ·
-      数据源 {html.escape(' / '.join(cfg.get('platforms') or []) or '—')} · {html.escape(refresh_note)}</p>
+      数据源 {source_state} · {html.escape(refresh_note)}</p>
   </div>
 </header>
 
@@ -777,7 +810,9 @@ def build_html(cfg: dict, conn, out_path: str) -> str:
   <section>
     <h2>当日全部航班价目</h2>
     {market or '<p class="hint">同轮抓取到的全部航班，按价格升序。监控班次已高亮。</p>'}
-    {QUERY_TOOLBAR}
+    {QUERY_TOOLBAR_TPL.format(
+        examples='、'.join(watch[:3]) or 'CZ3417',
+        arr_label=f'只看到达{to_name} {to_code}')}
     <div class="scroll"><table>
       <thead><tr>
         <th>航班</th><th>航司</th><th>机型</th><th>时刻</th>
@@ -801,6 +836,7 @@ def build_html(cfg: dict, conn, out_path: str) -> str:
         {html.escape(str((cfg.get('schedule') or {}).get('jitter_minutes', 0)))} 分钟</div>
       <div><span>本轮记录数</span>{len(rows)} 条</div>
       <div><span>历史样本</span>{total_samples} 轮</div>
+      <div style="grid-column:1/-1"><span>数据源</span>{source_state}</div>
     </div>
   </section>
 
@@ -881,9 +917,15 @@ def build_deploy_bundle(cfg: dict, conn, deploy_dir: str, db_path: str = "") -> 
     date = (route.get("dates") or [""])[0]
     threshold = float(route.get("alert_threshold") or 0)
 
-    latest = latest_round_rows(conn)
+    latest = latest_round_rows(conn, from_code=route.get("from", ""),
+                               to_code=route.get("to", ""))
     rows, last_fetch = latest if isinstance(latest, tuple) else ([], None)
     series = all_flights_history(conn, watch, date)
+    # 平台本轮实际产出（页面与 JSON 共用同一份统计）
+    present: dict = {}
+    for r in rows:
+        key = r.get("platform", "?")
+        present[key] = present.get(key, 0) + 1
     _, is_suspect = price_guard(rows)
     st = compute_stats(rows, series, watch, is_suspect, threshold)
     stats, cheapest = st["stats"], st["cheapest"]
@@ -979,6 +1021,9 @@ def build_deploy_bundle(cfg: dict, conn, deploy_dir: str, db_path: str = "") -> 
         "missing_flights": st["missing"],
         "flight_count": len(flights),
         "source": cfg.get("platforms") or [],
+        # 每个平台本轮实际产出多少条：携程被风控拦截时这里会是 0，页面与接口都能看出来
+        "platform_status": {p: present.get(p, 0)
+                            for p in (cfg.get("platforms") or [])},
     }
     (d / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2),
                                  encoding="utf-8")

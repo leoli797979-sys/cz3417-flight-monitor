@@ -1,0 +1,70 @@
+{
+  "updated_at": "2026-09-17 21:05:18",
+  "last_fetch": "2026-09-17 20:55:09",
+  "date": "2026-09-27",
+  "route": {
+    "from": "CTU",
+    "to": "CAN",
+    "from_name": "成都",
+    "to_name": "广州"
+  },
+  "watch_flights": [
+    "CZ3444",
+    "3U8729"
+  ],
+  "threshold": 700.0,
+  "flight": "CZ3444",
+  "current_price": 770.0,
+  "min_price": 770.0,
+  "max_price": 770.0,
+  "avg_price": 770.0,
+  "sample_count": 1,
+  "flights": [
+    {
+      "flight_no": "CZ3444",
+      "airline": "南方航空",
+      "aircraft": "空客320(中)",
+      "depart_time": "15:00",
+      "arrive_time": "17:30",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "price": 770.0,
+      "platform": "qunar",
+      "min_price": 770.0,
+      "max_price": 770.0,
+      "avg_price": 770.0,
+      "sample_count": 1,
+      "below_threshold": false,
+      "cheapest_among_watched": true
+    },
+    {
+      "flight_no": "3U8729",
+      "airline": "四川航空",
+      "aircraft": "空客320(中)",
+      "depart_time": "15:05",
+      "arrive_time": "17:30",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "price": 860.0,
+      "platform": "qunar",
+      "min_price": 860.0,
+      "max_price": 860.0,
+      "avg_price": 860.0,
+      "sample_count": 1,
+      "below_threshold": false,
+      "cheapest_among_watched": false
+    }
+  ],
+  "cheapest_flight": "CZ3444",
+  "cheapest_price": 770.0,
+  "missing_flights": [],
+  "flight_count": 141,
+  "source": [
+    "qunar",
+    "ctrip"
+  ],
+  "platform_status": {
+    "qunar": 141,
+    "ctrip": 0
+  }
+}

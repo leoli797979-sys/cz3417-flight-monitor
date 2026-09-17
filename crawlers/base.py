@@ -22,6 +22,73 @@ MOBILE_UA = ("Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) "
              "Version/16.6 Mobile/15E148 Safari/604.1")
 
 
+# 移动端反检测脚本：让浏览器的指纹自洽地"看起来像一台真 iPhone"。
+#
+# 为什么放在基类：携程的 Whale Guard 直接返回 "whaleguard block"、页面变成验证码墙，
+# 根因就是它发现 UA 是 iPhone Safari、但 navigator/WebGL 全是 Chromium 特征。
+# 去哪儿当初踩过同一个坑并在自己的类里打了补丁；这里统一提到基类，所有 use_mobile
+# 的爬虫（去哪儿/携程/同程）都自动生效。
+CHROMIUM_ONLY_KEYS = ("userAgentData", "connection", "deviceMemory", "chrome")
+
+MOBILE_STEALTH_JS = r"""
+(function(){
+  const define = (obj, prop, val) => {
+    try { Object.defineProperty(obj, prop, {get: () => val, configurable: true}); } catch(e){}
+  };
+  // 基础导航器：对齐 iPhone Safari
+  define(navigator, 'webdriver', undefined);
+  define(navigator, 'languages', ['zh-CN','zh']);
+  define(navigator, 'platform', 'iPhone');
+  define(navigator, 'maxTouchPoints', 5);
+  define(navigator, 'hardwareConcurrency', 6);
+  define(navigator, 'vendor', 'Apple Computer, Inc.');
+  // plugins 真机 Safari 为空
+  define(navigator, 'plugins', []);
+  define(navigator, 'mimeTypes', []);
+  // 清掉"只有 Chromium 才有"的接口 —— iPhone UA 却带这些东西是最典型的破绽
+  try { delete navigator.userAgentData; } catch(e){ try { define(navigator,'userAgentData',undefined); } catch(e2){} }
+  try { delete navigator.connection; } catch(e){ try { define(navigator,'connection',undefined); } catch(e2){} }
+  try { delete navigator.deviceMemory; } catch(e){}
+  try { window.chrome = undefined; } catch(e){}
+
+  // WebGL：把 NVIDIA/ANGLE 伪装成 Apple GPU
+  const APPLE_VENDOR = 'Apple Inc.';
+  const APPLE_RENDERER = 'Apple GPU';
+  const patchGL = (proto) => {
+    if (!proto || !proto.getParameter) return;
+    const orig = proto.getParameter;
+    proto.getParameter = function(p){
+      // UNMASKED_VENDOR_WEBGL=37445, UNMASKED_RENDERER_WEBGL=37446
+      if (p === 37445) return APPLE_VENDOR;
+      if (p === 37446) return APPLE_RENDERER;
+      // VENDOR=7936, RENDERER=7937
+      if (p === 7936) return 'WebKit';
+      if (p === 7937) return 'WebKit WebGL';
+      return orig.call(this, p);
+    };
+  };
+  try { patchGL(WebGLRenderingContext.prototype); } catch(e){}
+  try { patchGL(WebGL2RenderingContext.prototype); } catch(e){}
+
+  // 触摸事件支持标记（真机 Safari 有 ontouchstart）
+  try { define(window, 'ontouchstart', null); } catch(e){}
+
+  // Permissions.query 的 Chromium 行为在 Safari 上不存在，改为抛错前先拦掉
+  try {
+    if (navigator.permissions && navigator.permissions.query) {
+      const origQuery = navigator.permissions.query.bind(navigator.permissions);
+      navigator.permissions.query = function (p) {
+        if (p && p.name === 'notifications') {
+          return Promise.resolve({ state: 'default', onchange: null });
+        }
+        return origQuery(p);
+      };
+    }
+  } catch(e){}
+})();
+"""
+
+
 class BaseCrawler:
     name: str = "base"
     # 子类覆盖：是否使用手机端模拟
@@ -79,6 +146,12 @@ class BaseCrawler:
             ctx.add_init_script(
                 "Object.defineProperty(navigator,'webdriver',{get:()=>undefined});"
             )
+            if self.use_mobile:
+                # 移动端爬虫统一套用指纹伪装（携程 Whale Guard / 去哪儿 chloroFp 都会查这些）
+                try:
+                    ctx.add_init_script(MOBILE_STEALTH_JS)
+                except Exception:
+                    pass
             try:
                 yield ctx
             finally:

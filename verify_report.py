@@ -142,7 +142,7 @@ with sync_playwright() as p:
     check("搜索框 #q 存在", page.locator("#q").count() == 1)
     check("排序 #sort 存在", page.locator("#sort").count() == 1)
     check("阈值过滤 #cheap 存在", page.locator("#cheap").count() == 1)
-    check("双流过滤 #direct 存在", page.locator("#direct").count() == 1)
+    check("目的地过滤 #dest 存在（按航向动态生成）", page.locator("#dest").count() == 1)
     if page.locator("#q").count() and primary:
         total = page.evaluate("() => document.querySelectorAll('#tbl tr').length")
         shown0 = page.evaluate("() => [...document.querySelectorAll('#tbl tr')]"
@@ -186,15 +186,16 @@ with sync_playwright() as p:
               f"{total} → {cheap_n}, 达标={ok_cheap}")
         page.uncheck("#cheap")
 
-        page.check("#direct")
+        page.check("#dest")
         page.wait_for_timeout(250)
-        ok_ctu = page.evaluate("() => [...document.querySelectorAll('#tbl tr')]"
-                               ".filter(r => r.style.display !== 'none')"
-                               ".every(r => r.dataset.ctu === '1')")
-        direct_n = page.evaluate("() => [...document.querySelectorAll('#tbl tr')]"
-                                 ".filter(r => r.style.display !== 'none').length")
-        check("『只看到达双流』过滤正确", ok_ctu and 0 < direct_n < total, f"剩余 {direct_n}")
-        page.uncheck("#direct")
+        ok_dest = page.evaluate("() => [...document.querySelectorAll('#tbl tr')]"
+                                ".filter(r => r.style.display !== 'none')"
+                                ".every(r => r.dataset.arr === '1')")
+        dest_n = page.evaluate("() => [...document.querySelectorAll('#tbl tr')]"
+                               ".filter(r => r.style.display !== 'none').length")
+        check("『只看到达本页目的地』过滤正确且非空",
+              ok_dest and 0 < dest_n <= total, f"剩余 {dest_n}/{total}")
+        page.uncheck("#dest")
 
     browser.close()
 

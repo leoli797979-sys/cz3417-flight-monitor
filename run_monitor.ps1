@@ -135,6 +135,33 @@ function Publish-Snapshot {
     }
 }
 
+function Publish-ExtraPages {
+    # Extra monitoring pages (config.w5.yaml, config.ctucan.yaml, ...) share the same scrape
+    # and the same price DB - one route fetch already contains every flight - so they only
+    # need re-rendering: zero extra requests, zero extra rate-limit budget.
+    # Each page publishes to its own Cloudflare Pages project.
+    foreach ($cfgName in @("config.w5.yaml", "config.ctucan.yaml")) {
+        $cfgPath = Join-Path $root $cfgName
+        if (-not (Test-Path $cfgPath)) { continue }
+
+        $tag = [System.IO.Path]::GetFileNameWithoutExtension($cfgName)
+        $tmpO = Join-Path $logDir ("task." + $tag + ".out.tmp")
+        $tmpE = Join-Path $logDir ("task." + $tag + ".err.tmp")
+        Remove-Item $tmpO, $tmpE -ErrorAction SilentlyContinue
+
+        $p = Start-Process -FilePath $py -ArgumentList @("publish.py", "-q", "-c", $cfgName) `
+            -WorkingDirectory $root -NoNewWindow -PassThru -Wait `
+            -RedirectStandardOutput $tmpO -RedirectStandardError $tmpE
+        foreach ($f in @($tmpO, $tmpE)) {
+            if (Test-Path $f) {
+                Get-Content -Path $f -Encoding UTF8 | ForEach-Object { Write-Log ("  [" + $tag + "] " + $_) }
+            }
+        }
+        Remove-Item $tmpO, $tmpE -ErrorAction SilentlyContinue
+        Write-Log ("[" + $tag + "] publish exit code " + $p.ExitCode)
+    }
+}
+
 function Publish-SecondPage {
     # The evening-flights page (config.w5.yaml) shares the same scrape and the same DB
     # (one route fetch already contains every flight), so it only needs re-rendering -
@@ -189,8 +216,8 @@ try {
     # cloud-side scraping is impossible because qunar redirects datacenter IPs to a login page.
     if ($code -eq 0) { Publish-Snapshot }
 
-    # Re-render + publish the evening-flights page (shares the same DB, no extra scraping).
-    if ($code -eq 0) { Publish-SecondPage }
+    # Re-render + publish the extra monitoring pages (same DB, no extra scraping).
+    if ($code -eq 0) { Publish-ExtraPages }
 
     # Scheduled runs wake the machine; send it back to sleep when nobody is around.
     if ($SleepAfter) { Invoke-IdleSleep -IdleMinutes $IdleMinutes -DryRun:$DryRunSleep }

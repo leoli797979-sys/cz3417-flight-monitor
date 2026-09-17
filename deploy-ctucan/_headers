@@ -1,0 +1,5 @@
+/*
+  Cache-Control: public, max-age=60
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: no-referrer

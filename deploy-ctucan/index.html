@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CZ3444 · 3U8729 机票监控</title>
+<meta http-equiv="refresh" content="300">
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 0 0 48px;
+  font-family: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+  background: #f5f6f8; color: #1f2328; line-height: 1.55;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+header {
+  background: linear-gradient(135deg, #0b3d91 0%, #1f6feb 55%, #2da44e 100%);
+  color: #fff; padding: 26px 0 22px; margin-bottom: 22px;
+}
+header h1 { margin: 0 0 6px; font-size: 24px; letter-spacing: .5px; }
+header .sub { margin: 0; font-size: 15px; opacity: .95; }
+header .meta { margin: 10px 0 0; font-size: 12.5px; opacity: .82; }
+.banner {
+  background: #fff8c5; border: 1px solid #d4a72c; color: #7d4e00;
+  border-radius: 8px; padding: 10px 14px; margin: 0 0 18px; font-size: 13.5px;
+}
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 22px; }
+.card {
+  background: #fff; border: 1px solid #e3e6ea; border-radius: 10px;
+  padding: 16px 18px; box-shadow: 0 1px 2px rgba(27,31,36,.04);
+}
+.card.primary { border-color: #1f6feb; box-shadow: 0 0 0 1px #1f6feb inset, 0 2px 6px rgba(31,111,235,.12); }
+.card .label { display: block; font-size: 12.5px; color: #656d76; margin-bottom: 6px; }
+.card .value { display: block; font-size: 28px; font-weight: 650; letter-spacing: -.5px; }
+.card .note, .card .delta { display: block; font-size: 12px; margin-top: 4px; color: #656d76; }
+.delta.up { color: #cf222e; }
+.delta.down { color: #1a7f37; }
+section {
+  background: #fff; border: 1px solid #e3e6ea; border-radius: 10px;
+  padding: 18px 20px 20px; margin-bottom: 20px;
+}
+section h2 { margin: 0 0 4px; font-size: 17px; }
+section .hint { margin: 0 0 14px; font-size: 12.5px; color: #656d76; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid #eaeef2; white-space: nowrap; }
+th { background: #f6f8fa; color: #424a53; font-weight: 600; font-size: 12.5px; position: sticky; top: 0; }
+tbody tr:hover { background: #f6f8fa; }
+tr.target { background: #ddf4ff !important; font-weight: 600; }
+tr.target td:first-child { box-shadow: inset 3px 0 0 #1f6feb; }
+.mono { font-variant-numeric: tabular-nums; }
+.badge { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 20px; margin-left: 6px; vertical-align: 1px; }
+.badge.warn { background: #fff1e5; color: #bc4c00; border: 1px solid #ffd8b5; }
+.badge.info { background: #eef2ff; color: #3b41c5; border: 1px solid #d5dbff; }
+.badge.ok { background: #dafbe1; color: #1a7f37; border: 1px solid #aceebb; }
+.scroll { max-height: 620px; overflow: auto; border: 1px solid #eaeef2; border-radius: 8px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px 26px; font-size: 13.5px; }
+.grid2 div span { color: #656d76; display: inline-block; min-width: 74px; }
+footer { color: #656d76; font-size: 12px; text-align: center; margin-top: 26px; }
+.empty { padding: 26px; text-align: center; color: #656d76; }
+code { background: #f6f8fa; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 12px; }
+.toolbar input[type=search] {
+  flex: 1 1 260px; min-width: 200px; padding: 8px 11px; font-size: 13.5px;
+  border: 1px solid #d0d7de; border-radius: 7px; background: #fff;
+}
+.toolbar input[type=search]:focus { outline: 2px solid #1f6feb33; border-color: #1f6feb; }
+.toolbar select {
+  padding: 8px 10px; font-size: 13.5px; border: 1px solid #d0d7de;
+  border-radius: 7px; background: #fff;
+}
+.toolbar label { font-size: 13px; color: #424a53; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.toolbar .cnt { font-size: 12.5px; color: #656d76; margin-left: auto; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 10px 0 0; font-size: 12.5px; }
+.legend .lg { display: inline-flex; align-items: center; gap: 6px; color: #424a53; }
+.legend .lg i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.legend .lg b { font-weight: 600; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>✈️ 成都 → 广州 机票监控</h1>
+    <p class="sub">CZ3444 · 3U8729 · 2026-09-27 ·
+      共 2 个监控班次</p>
+    <p class="meta">生成时间 2026-09-17 21:05:18 · 最近抓取 2026-09-17 20:55:09 ·
+      数据源 qunar <span class="badge ok">有效 141 条</span> · ctrip <span class="badge warn">本轮无数据</span> · 页面每 300 秒自动刷新</p>
+  </div>
+</header>
+
+<div class="wrap">
+  
+  <div class="cards">
+  <div class="card">
+    <span class="label">本轮概览</span>
+    <span class="value" style="font-size:20px">最低 <b>CZ3444</b> ¥770 · 2 个班次 · 1 轮样本</span>
+    <span class="note">最近抓取 2026-09-17 20:55:09 · 数据源
+      qunar / ctrip</span>
+  </div>
+
+  <div class="card primary">
+    <span class="label">CZ3444 南方航空
+      <b style="color:#1f6feb">当前最低</b></span>
+    <span class="value" style="font-size:26px">¥770</span>
+    <span class="note">15:00 → 17:30
+      · 白云T2(CAN)</span>
+    <span class="delta ">较首次样本 持平 · 区间 ¥770–¥770</span>
+    
+  </div>
+
+  <div class="card">
+    <span class="label">3U8729 四川航空
+      </span>
+    <span class="value" style="font-size:26px">¥860</span>
+    <span class="note">15:05 → 17:30
+      · 白云T2(CAN)</span>
+    <span class="delta ">较首次样本 持平 · 区间 ¥860–¥860</span>
+    
+  </div></div>
+
+  <section>
+    <h2>价格走势</h2>
+    <p class="hint">各监控班次在每次抓取中的最低价。样本越多趋势越有意义；虚线为告警阈值。</p>
+    <svg viewBox="0 0 1060 360" width="100%" height="360" role="img" aria-label="多班次价格走势" style="display:block"><rect x="0" y="0" width="1060" height="360" fill="#fff"/><line x1="68" y1="312.0" x2="1030" y2="312.0" stroke="#eaeef2" stroke-width="1"/><text x="58" y="316.0" text-anchor="end" font-size="11.5" fill="#656d76">¥694</text><line x1="68" y1="241.5" x2="1030" y2="241.5" stroke="#eaeef2" stroke-width="1"/><text x="58" y="245.5" text-anchor="end" font-size="11.5" fill="#656d76">¥739</text><line x1="68" y1="171.0" x2="1030" y2="171.0" stroke="#eaeef2" stroke-width="1"/><text x="58" y="175.0" text-anchor="end" font-size="11.5" fill="#656d76">¥785</text><line x1="68" y1="100.5" x2="1030" y2="100.5" stroke="#eaeef2" stroke-width="1"/><text x="58" y="104.5" text-anchor="end" font-size="11.5" fill="#656d76">¥831</text><line x1="68" y1="30.0" x2="1030" y2="30.0" stroke="#eaeef2" stroke-width="1"/><text x="58" y="34.0" text-anchor="end" font-size="11.5" fill="#656d76">¥876</text><line x1="68" y1="302.5" x2="1030" y2="302.5" stroke="#cf222e" stroke-width="1.4" stroke-dasharray="6 5"/><text x="1030" y="295.5" text-anchor="end" font-size="11.5" fill="#cf222e">告警阈值 ¥700</text><circle cx="549.0" cy="194.3" r="3.8" fill="#fff" stroke="#1f6feb" stroke-width="2.2"/><text x="556.0" y="182.3" font-size="11" font-weight="600" fill="#1f6feb">3444 ¥770</text><circle cx="549.0" cy="55.1" r="3.8" fill="#fff" stroke="#cf222e" stroke-width="2.2"/><text x="556.0" y="75.1" font-size="11" font-weight="600" fill="#cf222e">8729 ¥860</text><text x="549.0" y="344" text-anchor="middle" font-size="11.5" fill="#656d76">09-17 20:55</text></svg><div class="legend"><span class="lg"><i style="background:#1f6feb"></i>CZ3444 <b>¥770</b></span><span class="lg"><i style="background:#cf222e"></i>3U8729 <b>¥860</b></span></div>
+  </section>
+
+  
+  <section>
+    <h2>监控班次对照</h2>
+    <p class="hint">同一航线同一天的各班次横向对比，按当前价升序。价格均为平台展示的经济舱最低价。</p>
+    <div class="scroll"><table>
+      <thead><tr>
+        <th>航班</th><th>航司</th><th>机型</th><th>时刻</th><th>到达</th>
+        <th>当前价</th><th>较最低</th><th>历史区间</th><th>均价</th><th>样本</th><th>状态</th>
+      </tr></thead>
+      <tbody><tr data-flight="CZ3444" data-price="770">
+      <td class="mono">CZ3444</td>
+      <td>南方航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">15:00 → 17:30</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td class="mono">最低</td>
+      <td class="mono">¥770–¥770</td>
+      <td class="mono">¥770</td>
+      <td class="mono">1</td>
+      <td><span class="badge ok">当前最低</span></td>
+    </tr><tr data-flight="3U8729" data-price="860">
+      <td class="mono">3U8729</td>
+      <td>四川航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">15:05 → 17:30</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥860</b></td>
+      <td class="mono">+¥90</td>
+      <td class="mono">¥860–¥860</td>
+      <td class="mono">¥860</td>
+      <td class="mono">1</td>
+      <td></td>
+    </tr></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>当日全部航班价目</h2>
+    <p class="hint">同轮抓取到的全部航班，按价格升序。监控班次已高亮。</p>
+    
+    <div class="toolbar">
+      <input type="search" id="q" placeholder="搜索航班号 / 航司 / 机场 / 时刻，例如 CZ3444、3U8729、15:15">
+      <select id="sort">
+        <option value="price-asc">价格 低 → 高</option>
+        <option value="price-desc">价格 高 → 低</option>
+        <option value="dep-asc">起飞时刻 早 → 晚</option>
+        <option value="dep-desc">起飞时刻 晚 → 早</option>
+      </select>
+      <label><input type="checkbox" id="cheap"> 只看已低于阈值</label>
+      <label><input type="checkbox" id="dest"> 只看到达广州 CAN</label>
+      <span class="cnt" id="cnt"></span>
+    </div>
+
+    <div class="scroll"><table>
+      <thead><tr>
+        <th>航班</th><th>航司</th><th>机型</th><th>时刻</th>
+        <th>出发</th><th>到达</th><th>价格</th><th>平台明细</th><th>备注</th>
+      </tr></thead>
+      <tbody id="tbl" data-threshold="700"><tr class="" data-price="400" data-dep="06:40" data-arr="1">
+      <td class="mono">ZH9442</td>
+      <td>深圳航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">06:40 → 09:20</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥400</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥400</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="400" data-dep="07:15" data-arr="1">
+      <td class="mono">EU2235</td>
+      <td>成都航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">07:15 → 09:50</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥400</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥400</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="429" data-dep="23:20" data-arr="1">
+      <td class="mono">AQ1118</td>
+      <td>九元航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">23:20 → 01:45</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥429</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥429</td>
+      <td><span class="badge warn">起飞时刻可疑</span></td>
+    </tr>
+<tr class="" data-price="450" data-dep="07:00" data-arr="1">
+      <td class="mono">3U8731</td>
+      <td>四川航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">07:00 → 09:25</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥450</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥450</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="450" data-dep="07:30" data-arr="1">
+      <td class="mono">3U8739</td>
+      <td>四川航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">07:30 → 10:00</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥450</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥450</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="450" data-dep="08:00" data-arr="1">
+      <td class="mono">3U6701</td>
+      <td>四川航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">08:00 → 10:25</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥450</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥450</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="450" data-dep="09:15" data-arr="1">
+      <td class="mono">CA4319</td>
+      <td>国际航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">09:15 → 11:40</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥450</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥450</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="460" data-dep="07:30" data-arr="1">
+      <td class="mono">TV9765</td>
+      <td>西藏航空</td>
+      <td>空客330(大)</td>
+      <td class="mono">07:30 → 10:00</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥460</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥460</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="500" data-dep="" data-arr="1">
+      <td class="mono">CA5581</td>
+      <td>国际航空</td>
+      <td></td>
+      <td class="mono">--:-- → 10:00</td>
+      <td>双流(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥500</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥500</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="500" data-dep="07:30" data-arr="1">
+      <td class="mono">GJ5389</td>
+      <td>长龙航空</td>
+      <td></td>
+      <td class="mono">07:30 → 10:00</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥500</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥500</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="500" data-dep="08:30" data-arr="1">
+      <td class="mono">CA4305</td>
+      <td>国际航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">08:30 → 10:35</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥500</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥500</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="500" data-dep="07:30" data-arr="1">
+      <td class="mono">KY6739</td>
+      <td>昆明航空</td>
+      <td>空客330(大)</td>
+      <td class="mono">07:30 → 10:00</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥500</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥500</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="510" data-dep="07:15" data-arr="1">
+      <td class="mono">CZ9693</td>
+      <td>南方航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">07:15 → 09:50</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥510</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥510</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="570" data-dep="12:00" data-arr="1">
+      <td class="mono">HU7152</td>
+      <td>海南航空</td>
+      <td>空客32N</td>
+      <td class="mono">12:00 → 14:40</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥570</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥570</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="579" data-dep="16:00" data-arr="1">
+      <td class="mono">AQ1116</td>
+      <td>九元航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">16:00 → 18:25</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥579</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥579</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="610" data-dep="21:45" data-arr="1">
+      <td class="mono">ZH9444</td>
+      <td>深圳航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">21:45 → 00:25</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥610</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥610</td>
+      <td><span class="badge warn">起飞时刻可疑</span></td>
+    </tr>
+<tr class="" data-price="620" data-dep="20:00" data-arr="1">
+      <td class="mono">JD5162</td>
+      <td>首都航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">20:00 → 22:20</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥620</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥620</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="627" data-dep="09:00" data-arr="1">
+      <td class="mono">MU5321</td>
+      <td>东方航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">09:00 → 11:30</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥627</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥627</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="660" data-dep="09:00" data-arr="1">
+      <td class="mono">3U5185</td>
+      <td>四川航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">09:00 → 11:30</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥660</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥660</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="660" data-dep="09:00" data-arr="1">
+      <td class="mono">KN6169</td>
+      <td>中国联合航空</td>
+      <td></td>
+      <td class="mono">09:00 → 11:30</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥660</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥660</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="660" data-dep="" data-arr="1">
+      <td class="mono">MF3727</td>
+      <td>厦门航空</td>
+      <td></td>
+      <td class="mono">--:-- → 11:30</td>
+      <td>天府(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥660</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥660</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="680" data-dep="13:55" data-arr="1">
+      <td class="mono">CA4333</td>
+      <td>国际航空</td>
+      <td>空客350(大)</td>
+      <td class="mono">13:55 → 16:30</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥680</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥680</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="700" data-dep="09:00" data-arr="1">
+      <td class="mono">CZ3414</td>
+      <td>南方航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">09:00 → 11:40</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥700</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥700</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="760" data-dep="11:55" data-arr="1">
+      <td class="mono">ZH9440</td>
+      <td>深圳航空</td>
+      <td>空客319(中)</td>
+      <td class="mono">11:55 → 13:55</td>
+      <td>双流T2(CTU)</td>
+      <td>白云(CAN)</td>
+      <td class="mono"><b>¥760</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥760</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="760" data-dep="11:55" data-arr="1">
+      <td class="mono">TV6217</td>
+      <td>西藏航空</td>
+      <td>空客319(中)</td>
+      <td class="mono">11:55 → 14:35</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥760</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥760</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="760" data-dep="12:55" data-arr="1">
+      <td class="mono">TV6363</td>
+      <td>西藏航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">12:55 → 15:20</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥760</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥760</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="760" data-dep="10:30" data-arr="1">
+      <td class="mono">3U8733</td>
+      <td>四川航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">10:30 → 13:00</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥760</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥760</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="760" data-dep="12:55" data-arr="1">
+      <td class="mono">CA4301</td>
+      <td>国际航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">12:55 → 15:20</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥760</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥760</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="07:00" data-arr="1">
+      <td class="mono">CZ9083</td>
+      <td>南方航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">07:00 → 09:25</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="07:00" data-arr="1">
+      <td class="mono">G58725</td>
+      <td>华夏航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">07:00 → 09:25</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="07:00" data-arr="1">
+      <td class="mono">MU3467</td>
+      <td>东方航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">07:00 → 09:25</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="07:15" data-arr="1">
+      <td class="mono">GJ5133</td>
+      <td>长龙航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">07:15 → 09:50</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="07:15" data-arr="1">
+      <td class="mono">MU3153</td>
+      <td>东方航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">07:15 → 09:50</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="07:15" data-arr="1">
+      <td class="mono">TV5133</td>
+      <td>西藏航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">07:15 → 09:50</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="08:00" data-arr="1">
+      <td class="mono">CZ4813</td>
+      <td>南方航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">08:00 → 10:25</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="08:00" data-arr="1">
+      <td class="mono">G58729</td>
+      <td>华夏航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">08:00 → 10:25</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="08:00" data-arr="1">
+      <td class="mono">MU3275</td>
+      <td>东方航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">08:00 → 10:25</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="10:30" data-arr="1">
+      <td class="mono">CZ9085</td>
+      <td>南方航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">10:30 → 13:00</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="10:30" data-arr="1">
+      <td class="mono">G56299</td>
+      <td>华夏航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">10:30 → 13:00</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="10:30" data-arr="1">
+      <td class="mono">MU3469</td>
+      <td>东方航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">10:30 → 13:00</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="12:00" data-arr="1">
+      <td class="mono">3U1142</td>
+      <td>四川航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">12:00 → 14:40</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="13:00" data-arr="1">
+      <td class="mono">3U1168</td>
+      <td>四川航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">13:00 → 15:35</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="target" data-price="770" data-dep="15:00" data-arr="1">
+      <td class="mono">CZ3444</td>
+      <td>南方航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">15:00 → 17:30</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td><span class="badge ok">监控班次</span></td>
+    </tr>
+<tr class="" data-price="770" data-dep="09:00" data-arr="1">
+      <td class="mono">3U1150</td>
+      <td>四川航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">09:00 → 11:40</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="770" data-dep="12:00" data-arr="1">
+      <td class="mono">CZ3402</td>
+      <td>南方航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">12:00 → 14:40</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥770</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥770</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="780" data-dep="09:00" data-arr="1">
+      <td class="mono">MF1193</td>
+      <td>厦门航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">09:00 → 11:40</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥780</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥780</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="785" data-dep="07:00" data-arr="1">
+      <td class="mono">MF4997</td>
+      <td>厦门航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">07:00 → 09:25</td>
+      <td>双流T1(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥785</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥785</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="785" data-dep="" data-arr="1">
+      <td class="mono">MF4707</td>
+      <td>厦门航空</td>
+      <td></td>
+      <td class="mono">--:-- → 10:25</td>
+      <td>天府T2(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥785</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥785</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="790" data-dep="10:30" data-arr="1">
+      <td class="mono">MF4999</td>
+      <td>厦门航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">10:30 → 13:00</td>
+      <td>双流T1(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥790</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥790</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="790" data-dep="06:40" data-arr="1">
+      <td class="mono">TV6778</td>
+      <td>西藏航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">06:40 → 09:20</td>
+      <td>天府T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥790</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥790</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="790" data-dep="07:15" data-arr="1">
+      <td class="mono">3U5595</td>
+      <td>四川航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">07:15 → 09:50</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥790</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥790</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="790" data-dep="11:45" data-arr="1">
+      <td class="mono">CA3742</td>
+      <td>国际航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">11:45 → 13:55</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥790</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥790</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="790" data-dep="11:45" data-arr="1">
+      <td class="mono">SC9288</td>
+      <td>山东航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">11:45 → 13:55</td>
+      <td>双流T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥790</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥790</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="790" data-dep="18:55" data-arr="1">
+      <td class="mono">CA3690</td>
+      <td>国际航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">18:55 → 21:30</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥790</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥790</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="790" data-dep="18:55" data-arr="1">
+      <td class="mono">G56110</td>
+      <td>华夏航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">18:55 → 21:30</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥790</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥790</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="790" data-dep="18:55" data-arr="1">
+      <td class="mono">SC9292</td>
+      <td>山东航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">18:55 → 21:30</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥790</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥790</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="790" data-dep="18:55" data-arr="1">
+      <td class="mono">TV6600</td>
+      <td>西藏航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">18:55 → 21:30</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥790</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥790</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="790" data-dep="21:45" data-arr="1">
+      <td class="mono">CA3830</td>
+      <td>国际航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">21:45 → 00:25</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥790</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥790</td>
+      <td><span class="badge warn">起飞时刻可疑</span></td>
+    </tr>
+<tr class="" data-price="790" data-dep="21:45" data-arr="1">
+      <td class="mono">G56108</td>
+      <td>华夏航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">21:45 → 00:25</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥790</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥790</td>
+      <td><span class="badge warn">起飞时刻可疑</span></td>
+    </tr>
+<tr class="" data-price="790" data-dep="21:45" data-arr="1">
+      <td class="mono">SC9290</td>
+      <td>山东航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">21:45 → 00:25</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥790</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥790</td>
+      <td><span class="badge warn">起飞时刻可疑</span></td>
+    </tr>
+<tr class="" data-price="790" data-dep="21:45" data-arr="1">
+      <td class="mono">TV6598</td>
+      <td>西藏航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">21:45 → 00:25</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥790</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥790</td>
+      <td><span class="badge warn">起飞时刻可疑</span></td>
+    </tr>
+<tr class="" data-price="790" data-dep="18:55" data-arr="1">
+      <td class="mono">8L7152</td>
+      <td>祥鹏航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">18:55 → 14:40</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥790</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥790</td>
+      <td><span class="badge warn">起飞时刻可疑</span></td>
+    </tr>
+<tr class="" data-price="798" data-dep="16:05" data-arr="1">
+      <td class="mono">MU6185</td>
+      <td>东方航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">16:05 → 18:35</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥798</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥798</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="817" data-dep="20:30" data-arr="1">
+      <td class="mono">MU6142</td>
+      <td>东方航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">20:30 → 23:05</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥817</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥817</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="820" data-dep="07:00" data-arr="1">
+      <td class="mono">EU7433</td>
+      <td>成都航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">07:00 → 09:25</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥820</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥820</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="820" data-dep="08:00" data-arr="1">
+      <td class="mono">EU7231</td>
+      <td>成都航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">08:00 → 10:25</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥820</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥820</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="840" data-dep="18:30" data-arr="1">
+      <td class="mono">G58169</td>
+      <td>华夏航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">18:30 → 21:05</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥840</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥840</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="840" data-dep="18:30" data-arr="1">
+      <td class="mono">TV6361</td>
+      <td>西藏航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">18:30 → 21:05</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥840</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥840</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="840" data-dep="18:30" data-arr="1">
+      <td class="mono">CA4309</td>
+      <td>国际航空</td>
+      <td></td>
+      <td class="mono">18:30 → 21:05</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥840</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥840</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="860" data-dep="10:30" data-arr="1">
+      <td class="mono">EU7435</td>
+      <td>成都航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">10:30 → 13:00</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥860</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥860</td>
+      <td></td>
+    </tr>
+<tr class="target" data-price="860" data-dep="15:05" data-arr="1">
+      <td class="mono">3U8729</td>
+      <td>四川航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">15:05 → 17:30</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥860</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥860</td>
+      <td><span class="badge ok">监控班次</span></td>
+    </tr>
+<tr class="" data-price="860" data-dep="16:05" data-arr="1">
+      <td class="mono">3U5373</td>
+      <td>四川航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">16:05 → 18:35</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥860</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥860</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="860" data-dep="20:30" data-arr="1">
+      <td class="mono">3U5362</td>
+      <td>四川航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">20:30 → 23:05</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥860</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥860</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="860" data-dep="20:30" data-arr="1">
+      <td class="mono">KN6234</td>
+      <td>中国联合航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">20:30 → 23:05</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥860</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥860</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="860" data-dep="20:30" data-arr="1">
+      <td class="mono">MF7471</td>
+      <td>厦门航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">20:30 → 23:05</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥860</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥860</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="860" data-dep="22:00" data-arr="1">
+      <td class="mono">CZ3428</td>
+      <td>南方航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">22:00 → 00:40</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥860</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥860</td>
+      <td><span class="badge warn">起飞时刻可疑</span></td>
+    </tr>
+<tr class="" data-price="870" data-dep="15:30" data-arr="1">
+      <td class="mono">CA4303</td>
+      <td>国际航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">15:30 → 17:50</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥870</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥870</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="870" data-dep="20:00" data-arr="1">
+      <td class="mono">TV6278</td>
+      <td>西藏航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">20:00 → 22:55</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥870</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥870</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="870" data-dep="20:30" data-arr="1">
+      <td class="mono">3U8737</td>
+      <td>四川航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">20:30 → 22:55</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥870</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥870</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="870" data-dep="20:00" data-arr="1">
+      <td class="mono">CA4328</td>
+      <td>国际航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">20:00 → 22:55</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥870</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥870</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="890" data-dep="11:45" data-arr="1">
+      <td class="mono">KY9258</td>
+      <td>昆明航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">11:45 → 13:55</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥890</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥890</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="890" data-dep="13:30" data-arr="1">
+      <td class="mono">CZ4815</td>
+      <td>南方航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">13:30 → 15:50</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥890</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥890</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="890" data-dep="13:30" data-arr="1">
+      <td class="mono">MU3277</td>
+      <td>东方航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">13:30 → 15:50</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥890</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥890</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="890" data-dep="18:55" data-arr="1">
+      <td class="mono">KY9262</td>
+      <td>昆明航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">18:55 → 21:30</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥890</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥890</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="890" data-dep="19:30" data-arr="1">
+      <td class="mono">MU3279</td>
+      <td>东方航空</td>
+      <td></td>
+      <td class="mono">19:30 → 21:50</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥890</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥890</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="890" data-dep="20:30" data-arr="1">
+      <td class="mono">CZ9089</td>
+      <td>南方航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">20:30 → 22:55</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥890</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥890</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="890" data-dep="20:30" data-arr="1">
+      <td class="mono">GJ3437</td>
+      <td>长龙航空</td>
+      <td></td>
+      <td class="mono">20:30 → 22:55</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥890</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥890</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="890" data-dep="20:30" data-arr="1">
+      <td class="mono">MU3473</td>
+      <td>东方航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">20:30 → 22:55</td>
+      <td>双流T1(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥890</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥890</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="890" data-dep="21:45" data-arr="1">
+      <td class="mono">KY9260</td>
+      <td>昆明航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">21:45 → 00:25</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥890</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥890</td>
+      <td><span class="badge warn">起飞时刻可疑</span></td>
+    </tr>
+<tr class="" data-price="890" data-dep="19:30" data-arr="1">
+      <td class="mono">CZ4817</td>
+      <td>南方航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">19:30 → 21:50</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥890</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥890</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="893" data-dep="18:05" data-arr="1">
+      <td class="mono">MU6832</td>
+      <td>东方航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">18:05 → 20:30</td>
+      <td>天府T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥893</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥893</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="905" data-dep="13:30" data-arr="1">
+      <td class="mono">MF4709</td>
+      <td>厦门航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">13:30 → 15:50</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥905</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥905</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="905" data-dep="19:30" data-arr="1">
+      <td class="mono">MF4711</td>
+      <td>厦门航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">19:30 → 21:50</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥905</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥905</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="905" data-dep="20:30" data-arr="1">
+      <td class="mono">MF5003</td>
+      <td>厦门航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">20:30 → 22:55</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥905</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥905</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="910" data-dep="12:00" data-arr="1">
+      <td class="mono">GJ3028</td>
+      <td>长龙航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">12:00 → 14:40</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥910</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥910</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="910" data-dep="13:00" data-arr="1">
+      <td class="mono">GJ3032</td>
+      <td>长龙航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">13:00 → 15:35</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥910</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥910</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="920" data-dep="19:30" data-arr="1">
+      <td class="mono">GJ3034</td>
+      <td>长龙航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">19:30 → 21:50</td>
+      <td>天府T2(TFU)</td>
+      <td>白云(CAN)</td>
+      <td class="mono"><b>¥920</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥920</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="922" data-dep="15:00" data-arr="1">
+      <td class="mono">QW9947</td>
+      <td>青岛航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">15:00 → 21:50</td>
+      <td>T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥922</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥922</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="940" data-dep="13:30" data-arr="1">
+      <td class="mono">EU7233</td>
+      <td>成都航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">13:30 → 15:50</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥940</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥940</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="940" data-dep="16:30" data-arr="1">
+      <td class="mono">3U8735</td>
+      <td>四川航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">16:30 → 19:15</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥940</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥940</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="940" data-dep="17:00" data-arr="1">
+      <td class="mono">CZ3472</td>
+      <td>南方航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">17:00 → 19:35</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥940</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥940</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="940" data-dep="19:30" data-arr="1">
+      <td class="mono">EU7235</td>
+      <td>成都航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">19:30 → 21:50</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥940</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥940</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="940" data-dep="20:30" data-arr="1">
+      <td class="mono">EU7439</td>
+      <td>成都航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">20:30 → 22:55</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥940</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥940</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="950" data-dep="16:05" data-arr="1">
+      <td class="mono">KN6243</td>
+      <td>中国联合航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">16:05 → 18:35</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥950</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥950</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="950" data-dep="22:00" data-arr="1">
+      <td class="mono">HO7416</td>
+      <td>吉祥航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">22:00 → 00:40</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥950</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥950</td>
+      <td><span class="badge warn">起飞时刻可疑</span></td>
+    </tr>
+<tr class="" data-price="950" data-dep="22:00" data-arr="1">
+      <td class="mono">MF1203</td>
+      <td>厦门航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">22:00 → 00:40</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥950</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥950</td>
+      <td><span class="badge warn">起飞时刻可疑</span></td>
+    </tr>
+<tr class="" data-price="970" data-dep="18:05" data-arr="1">
+      <td class="mono">3U5456</td>
+      <td>四川航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">18:05 → 20:30</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥970</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥970</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1000" data-dep="16:30" data-arr="1">
+      <td class="mono">CZ9087</td>
+      <td>南方航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">16:30 → 19:15</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1000</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1000</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1000" data-dep="16:30" data-arr="1">
+      <td class="mono">G58859</td>
+      <td>华夏航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">16:30 → 19:15</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1000</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1000</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1000" data-dep="16:30" data-arr="1">
+      <td class="mono">GJ3435</td>
+      <td>长龙航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">16:30 → 19:15</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1000</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1000</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1000" data-dep="16:30" data-arr="1">
+      <td class="mono">MU3471</td>
+      <td>东方航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">16:30 → 19:15</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1000</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1000</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1010" data-dep="17:00" data-arr="1">
+      <td class="mono">GJ3040</td>
+      <td>长龙航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">17:00 → 19:35</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1010</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1010</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1015" data-dep="16:30" data-arr="1">
+      <td class="mono">MF5001</td>
+      <td>厦门航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">16:30 → 19:15</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1015</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1015</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1020" data-dep="13:30" data-arr="1">
+      <td class="mono">G58741</td>
+      <td>华夏航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">13:30 → 15:50</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1020</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1020</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1020" data-dep="19:30" data-arr="1">
+      <td class="mono">G58843</td>
+      <td>华夏航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">19:30 → 21:50</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1020</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1020</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1040" data-dep="16:30" data-arr="1">
+      <td class="mono">EU7437</td>
+      <td>成都航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">16:30 → 19:15</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1040</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1040</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1040" data-dep="20:30" data-arr="1">
+      <td class="mono">G58861</td>
+      <td>华夏航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">20:30 → 22:55</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1040</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1040</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1080" data-dep="07:00" data-arr="1">
+      <td class="mono">GJ3431</td>
+      <td>长龙航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">07:00 → 09:25</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1080</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1080</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1080" data-dep="19:00" data-arr="1">
+      <td class="mono">CZ3418</td>
+      <td>南方航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">19:00 → 21:35</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1080</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1080</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1120" data-dep="10:30" data-arr="1">
+      <td class="mono">GJ3433</td>
+      <td>长龙航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">10:30 → 13:00</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1120</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1120</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1120" data-dep="19:00" data-arr="1">
+      <td class="mono">GJ3030</td>
+      <td>长龙航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">19:00 → 21:35</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1120</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1120</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1160" data-dep="09:00" data-arr="1">
+      <td class="mono">HO7412</td>
+      <td>吉祥航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">09:00 → 11:40</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1160</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1160</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1160" data-dep="15:00" data-arr="1">
+      <td class="mono">HO7420</td>
+      <td>吉祥航空</td>
+      <td>其他机型</td>
+      <td class="mono">15:00 → 17:30</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1160</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1160</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1160" data-dep="13:00" data-arr="1">
+      <td class="mono">HO7418</td>
+      <td>吉祥航空</td>
+      <td></td>
+      <td class="mono">13:00 → 15:35</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1160</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1160</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1180" data-dep="17:00" data-arr="1">
+      <td class="mono">3U1192</td>
+      <td>四川航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">17:00 → 19:35</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1180</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1180</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1180" data-dep="19:00" data-arr="1">
+      <td class="mono">3U1154</td>
+      <td>四川航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">19:00 → 21:35</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1180</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1180</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1270" data-dep="07:00" data-arr="1">
+      <td class="mono">HO5856</td>
+      <td>吉祥航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">07:00 → 09:25</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1270</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1270</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1270" data-dep="16:30" data-arr="1">
+      <td class="mono">HO5860</td>
+      <td>吉祥航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">16:30 → 19:15</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1270</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1270</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1270" data-dep="17:00" data-arr="1">
+      <td class="mono">HO7422</td>
+      <td>吉祥航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">17:00 → 19:35</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1270</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1270</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1270" data-dep="10:30" data-arr="1">
+      <td class="mono">HO5858</td>
+      <td>吉祥航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">10:30 → 13:00</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1270</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1270</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1370" data-dep="20:30" data-arr="1">
+      <td class="mono">HO5862</td>
+      <td>吉祥航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">20:30 → 22:55</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥1370</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1370</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1680" data-dep="07:30" data-arr="1">
+      <td class="mono">EU7747</td>
+      <td>成都航空</td>
+      <td>空客330(大)</td>
+      <td class="mono">07:30 → 10:00</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥1680</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1680</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1720" data-dep="16:05" data-arr="1">
+      <td class="mono">MF7490</td>
+      <td>厦门航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">16:05 → 18:35</td>
+      <td>天府T2(TFU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥1720</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1720</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="1720" data-dep="18:05" data-arr="1">
+      <td class="mono">MF7773</td>
+      <td>厦门航空</td>
+      <td>空客320(中)</td>
+      <td class="mono">18:05 → 20:30</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥1720</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥1720</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="2070" data-dep="12:00" data-arr="1">
+      <td class="mono">MF1183</td>
+      <td>厦门航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">12:00 → 14:40</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥2070</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥2070</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="2070" data-dep="" data-arr="1">
+      <td class="mono">MF1213</td>
+      <td>厦门航空</td>
+      <td></td>
+      <td class="mono">--:-- → 17:30</td>
+      <td>(CTU)</td>
+      <td>(CAN)</td>
+      <td class="mono"><b>¥2070</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥2070</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="2070" data-dep="17:00" data-arr="1">
+      <td class="mono">MF1237</td>
+      <td>厦门航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">17:00 → 19:35</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥2070</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥2070</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="2070" data-dep="19:00" data-arr="1">
+      <td class="mono">MF1197</td>
+      <td>厦门航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">19:00 → 21:35</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥2070</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥2070</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="2070" data-dep="13:00" data-arr="1">
+      <td class="mono">MF1207</td>
+      <td>厦门航空</td>
+      <td>波音737(中)</td>
+      <td class="mono">13:00 → 15:35</td>
+      <td>双流T1(CTU)</td>
+      <td>白云T2(CAN)</td>
+      <td class="mono"><b>¥2070</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥2070</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="2070" data-dep="" data-arr="1">
+      <td class="mono">TV6261</td>
+      <td>西藏航空</td>
+      <td>空客321(中)</td>
+      <td class="mono">--:-- → 17:50</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥2070</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥2070</td>
+      <td></td>
+    </tr>
+<tr class="" data-price="2270" data-dep="07:30" data-arr="1">
+      <td class="mono">SC6047</td>
+      <td>山东航空</td>
+      <td>空客330(大)</td>
+      <td class="mono">07:30 → 10:00</td>
+      <td>双流T2(CTU)</td>
+      <td>白云T3(CAN)</td>
+      <td class="mono"><b>¥2270</b></td>
+      <td style="font-size:12.5px;color:#656d76">qunar¥2270</td>
+      <td></td>
+    </tr></tbody>
+    </table></div>
+  </section>
+
+  
+  <section>
+    <h2>监控班次抓取明细</h2>
+    <p class="hint">每次抓到这些班次的原始记录（最新在前，最多 60 条）。</p>
+    <div class="scroll"><table>
+      <thead><tr><th>抓取时间</th><th>航班</th><th>平台</th><th>时刻</th><th>价格</th><th>航司</th></tr></thead>
+      <tbody><tr>
+      <td class="mono">2026-09-17 20:55:09</td>
+      <td class="mono">3U8729</td>
+      <td>qunar</td>
+      <td class="mono">15:05 → 17:30</td>
+      <td class="mono">¥860</td>
+      <td>四川航空</td>
+    </tr><tr>
+      <td class="mono">2026-09-17 20:55:09</td>
+      <td class="mono">CZ3444</td>
+      <td>qunar</td>
+      <td class="mono">15:00 → 17:30</td>
+      <td class="mono">¥770</td>
+      <td>南方航空</td>
+    </tr></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>运行状态</h2>
+    <div class="grid2">
+      <div><span>监控航线</span>成都(CTU) → 广州(CAN)</div>
+      <div><span>监控日期</span>2026-09-27</div>
+      <div><span>监控班次</span>CZ3444 · 3U8729</div>
+      <div><span>起飞时刻窗</span>不限 – 不限</div>
+      <div><span>告警阈值</span>¥700</div>
+      <div><span>抓取间隔</span>90 分钟 ±
+        30 分钟</div>
+      <div><span>本轮记录数</span>141 条</div>
+      <div><span>历史样本</span>1 轮</div>
+      <div style="grid-column:1/-1"><span>数据源</span>qunar <span class="badge ok">有效 141 条</span> · ctrip <span class="badge warn">本轮无数据</span></div>
+    </div>
+  </section>
+
+  <footer>
+    数据来自公开页面抓取，仅供个人出行参考，不含会员价 / 券后价，实际下单以航司页面为准。<br>
+    项目基于 <a href="https://github.com/yangka1212/JiPiao">yangka1212/JiPiao</a>（MIT）改造：增加按航班号解析与告警。
+  </footer>
+</div>
+
+<script>
+(function () {
+  var q = document.getElementById('q'),
+      sort = document.getElementById('sort'),
+      cheap = document.getElementById('cheap'),
+      dest = document.getElementById('dest'),
+      tbody = document.getElementById('tbl'),
+      cnt = document.getElementById('cnt');
+  if (!tbody) { return; }
+  var all = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+  var threshold = parseFloat(tbody.getAttribute('data-threshold') || '0');
+
+  function visible(tr) {
+    var term = (q.value || '').trim().toLowerCase();
+    if (term && tr.innerText.toLowerCase().indexOf(term) < 0) { return false; }
+    if (cheap.checked && threshold > 0 && parseFloat(tr.dataset.price) > threshold) { return false; }
+    // 目的地过滤按航向生成（data-arr=1 表示落在本页的目的地机场）
+    if (dest && dest.checked && tr.dataset.arr !== '1') { return false; }
+    return true;
+  }
+  function apply() {
+    var shown = 0;
+    all.forEach(function (tr) {
+      var ok = visible(tr);
+      tr.style.display = ok ? '' : 'none';
+      if (ok) { shown++; }
+    });
+    cnt.textContent = '显示 ' + shown + ' / ' + all.length + ' 个航班';
+  }
+  function sortRows() {
+    var mode = sort.value;
+    var arr = all.slice();
+    if (mode === 'price-asc') { arr.sort(function (a, b) { return a.dataset.price - b.dataset.price; }); }
+    else if (mode === 'price-desc') { arr.sort(function (a, b) { return b.dataset.price - a.dataset.price; }); }
+    else if (mode === 'dep-asc') { arr.sort(function (a, b) { return (a.dataset.dep || '99:99').localeCompare(b.dataset.dep || '99:99'); }); }
+    else if (mode === 'dep-desc') { arr.sort(function (a, b) { return (b.dataset.dep || '').localeCompare(a.dataset.dep || ''); }); }
+    arr.forEach(function (tr) { tbody.appendChild(tr); });
+  }
+  q.addEventListener('input', apply);
+  cheap.addEventListener('change', apply);
+  if (dest) { dest.addEventListener('change', apply); }
+  sort.addEventListener('change', function () { sortRows(); apply(); });
+  apply();
+})();
+</script>
+
+</body>
+</html>
