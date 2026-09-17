@@ -24,6 +24,7 @@ param(
     [switch]$NoWake,                     # by default the task wakes the PC from sleep/hibernate
     [int]$SleepAfterMinutes = 10,        # sleep again after the round if idle this long (0 = never)
     [int]$RoundTimeoutMinutes = 5,       # watchdog: kill a round that runs longer than this
+    [string]$RepeatUntil = "",           # e.g. "2026-09-26 00:00" - stop repeating after this moment
     [switch]$Uninstall,
     [switch]$Status,
     [switch]$RunNow
@@ -134,10 +135,20 @@ $action = New-ScheduledTaskAction `
     -Argument $argLine `
     -WorkingDirectory $root
 
-# First run 2 minutes from now, then repeat every $IntervalMinutes for ~10 years.
+# First run 2 minutes from now, then repeat every $IntervalMinutes.
+# With -RepeatUntil the repetition stops at that moment (used for a known end of the
+# monitoring window, e.g. "only until 2026-09-25"), so the task cannot keep burning
+# Cloudflare publish quota after the flight is no longer worth watching.
+$duration = New-TimeSpan -Days 3650
+if ($RepeatUntil) {
+    $until = [datetime]::Parse($RepeatUntil)
+    $span = $until - (Get-Date)
+    if ($span.TotalMinutes -lt 2) { throw "RepeatUntil is in the past or too close: $RepeatUntil" }
+    $duration = $span
+}
 $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(2) `
     -RepetitionInterval (New-TimeSpan -Minutes $IntervalMinutes) `
-    -RepetitionDuration (New-TimeSpan -Days 3650)
+    -RepetitionDuration $duration
 
 $settingArgs = @{
     AllowStartIfOnBatteries = $true

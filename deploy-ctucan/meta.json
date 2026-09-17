@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-09-17 23:53:20",
-  "last_fetch": "2026-09-17 23:53:04",
+  "updated_at": "2026-09-18 00:01:39",
+  "last_fetch": "2026-09-18 00:01:23",
   "date": "2026-09-27",
   "route": {
     "from": "CTU",
@@ -18,12 +18,12 @@
   "min_price": 770.0,
   "max_price": 770.0,
   "avg_price": 770.0,
-  "sample_count": 15,
+  "sample_count": 17,
   "flights": [
     {
       "flight_no": "CZ3444",
       "airline": "南方航空",
-      "aircraft": "空客320(中)",
+      "aircraft": "",
       "depart_time": "15:00",
       "arrive_time": "17:30",
       "dep_airport": "",
@@ -33,14 +33,14 @@
       "min_price": 770.0,
       "max_price": 770.0,
       "avg_price": 770.0,
-      "sample_count": 14,
+      "sample_count": 16,
       "below_threshold": false,
       "cheapest_among_watched": true
     },
     {
       "flight_no": "3U8729",
       "airline": "四川航空",
-      "aircraft": "空客320(中)",
+      "aircraft": "",
       "depart_time": "15:05",
       "arrive_time": "17:30",
       "dep_airport": "",
@@ -50,7 +50,7 @@
       "min_price": 860.0,
       "max_price": 860.0,
       "avg_price": 860.0,
-      "sample_count": 15,
+      "sample_count": 17,
       "below_threshold": false,
       "cheapest_among_watched": false
     }
