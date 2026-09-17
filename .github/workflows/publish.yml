@@ -48,26 +48,16 @@ jobs:
       - name: Install report dependencies
         run: python -m pip install --quiet PyYAML
 
-      - name: Build CZ3417 page (site root)
-        run: python report.py -c config.ci.yaml --deploy-dir deploy
+      # 只发布成都→广州这一页（CZ3444 / 3U8729）。
+      # 同时构建到根路径与 /ctucan/：根路径是站点默认入口，/ctucan/ 保留此前分享过的旧链接。
+      - name: Build Chengdu-Guangzhou page (root)
+        run: python report.py -c config.ctucan.yaml --deploy-dir deploy
 
-      # 晚间 5 班页面作为子站点发布到 /w5/（同一份价格库，只是不同的监控班次与版面）
-      - name: Build evening-flights page (/w5/)
-        run: python report.py -c config.w5.yaml --deploy-dir deploy/w5
-
-      # 成都→广州 09-27 页面（CZ3444 / 3U8729）发布到 /ctucan/
-      - name: Build Chengdu-Guangzhou page (/ctucan/)
+      - name: Build the same page at /ctucan/ (keep the old link alive)
         run: python report.py -c config.ctucan.yaml --deploy-dir deploy/ctucan
 
       - name: Summary
-        run: |
-          python scripts/ci_summary.py --deploy-dir deploy --summary-out "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "### 晚间 5 班页面（/w5/）" >> "$GITHUB_STEP_SUMMARY"
-          python scripts/ci_summary.py --deploy-dir deploy/w5 --summary-out "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "### 成都→广州页面（/ctucan/）" >> "$GITHUB_STEP_SUMMARY"
-          python scripts/ci_summary.py --deploy-dir deploy/ctucan --summary-out "$GITHUB_STEP_SUMMARY"
+        run: python scripts/ci_summary.py --deploy-dir deploy --summary-out "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-pages-artifact@v3
         with:

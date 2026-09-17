@@ -34,9 +34,13 @@ platforms:
   - ctrip
 
 schedule:
-  interval_minutes: 90
-  jitter_minutes: 30
+  # 只监控这一个航向，一轮只有 1 次去哪儿请求 + 1 次携程请求，约 1~2 分钟跑完。
+  # 瓶颈仍是"缓存令牌别放太久"：令牌 30–90 分钟成功率最高，所以 30 分钟一轮。
+  interval_minutes: 30
+  jitter_minutes: 5
   run_on_start: true
+  # 现在只有一个航向，这个"航向间隔"不再起作用（保留以便将来加航线时复用）
+  route_delay_seconds: 0
 
 crawler:
   headless: true
@@ -58,7 +62,9 @@ output:
   deploy_dir: deploy-ctucan
 
 publish:
-  enabled: false                    # 由 publish.py -c config.ctucan.yaml 显式发布
+  # 这份配置现在是**主配置**：定时任务直接跑它（抓取 + 告警 + 发布一条龙），
+  # 因此开启自动发布到 ctu-can-monitor.pages.dev。
+  enabled: true
   provider: cloudflare-pages
   project: ctu-can-monitor
   min_interval_minutes: 180

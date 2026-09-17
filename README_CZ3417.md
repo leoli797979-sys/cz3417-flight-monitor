@@ -305,31 +305,29 @@ whaleguard block
 
 ### 公开地址（均已验证可用）
 
-本项目现在有**两个独立监控页面**（各自独立的班次清单、版面与配置）：
+> **当前只监控一个页面**：成都→广州 09-27（CZ3444 / 3U8729，携程 + 去哪儿）。
+> CZ3417 与晚间 5 班的页面已停止更新（配置与代码保留，随时可恢复）。
 
-| 页面 | Cloudflare Pages（主） | GitHub Pages（备） | 监控班次 |
+| 页面 | 状态 | Cloudflare Pages | GitHub Pages |
 |---|---|---|---|
-| CZ3417 | https://cz3417-monitor.pages.dev/ | https://leoli797979-sys.github.io/cz3417-flight-monitor/ | CZ3417（15:15→17:35，09-22） |
-| **晚间 5 班** | **https://can-ctu-evening.pages.dev/** | .../cz3417-flight-monitor/w5/ | 3U8736 · 3U1149 · MF1192 · CZ3413 · CZ9088 |
-| **成都→广州** | **https://ctu-can-monitor.pages.dev/** | .../cz3417-flight-monitor/ctucan/ | CZ3444 · 3U8729（15:00/15:05→17:30，09-27） |
+| **成都→广州 09-27** | ✅ **监控中** | **https://ctu-can-monitor.pages.dev/** | https://leoli797979-sys.github.io/cz3417-flight-monitor/ （根路径）<br>…/cz3417-flight-monitor/ctucan/ （旧链接仍可访问） |
+| CZ3417 | ⏸ 已停止更新 | cz3417-monitor.pages.dev（冻结在上次快照） | 根路径已被上方页面取代 |
+| 晚间 5 班 | ⏸ 已停止更新 | can-ctu-evening.pages.dev（冻结） | …/w5/（新的 Pages 部署不再包含） |
 
 每个页面都提供同路径的机器可读接口：
 
 | 用途 | 路径 |
 |---|---|
-| 摘要（各班次当前价/区间/样本数/更新时间） | `/meta.json` |
+| 摘要（各班次当前价/区间/样本数/**各数据源本轮状态**/更新时间） | `/meta.json` |
 | 各班次价格历史序列 | `/history.json` |
 | 最近一轮全部航班 + 各班次当前价 | `/latest.json` |
 
 这些地址在**电脑关机后照样能打开**（页面托管在 Cloudflare / GitHub 的服务器上，与本机无关）。
 页面内含查询框（搜索/排序/过滤），JSON 接口供外部程序查询。
 
-* **Cloudflare Pages**：由本机每轮抓取后自动重新发布，
-  `Cache-Control: public, max-age=60`，所以更新后约 1 分钟内可见。
-  发布节流状态**按项目分开存**（`.last-publish.<项目名>.json`）——早期两页共用一个状态文件时，
-  互相覆盖"上次发布价"会让节流误判为"价格变了"而失效。
-* **GitHub Pages**：本机推送 `data/prices.db` 后由 `publish.yml` 自动渲染发布；
-  该工作流会同时构建两个页面（晚间 5 班挂在 `/w5/` 子路径下）。
+* **本机计划任务**每 **30 分钟**跑一轮 `main.py -c config.ctucan.yaml`（只抓成都→广州一个航向），
+  一轮约 **46 秒**；每轮结束自动发布到 Cloudflare Pages（价格未变时按 180 分钟节流）。
+* **GitHub Pages**：本机推送 `data/prices.db` 后由 `publish.yml` 自动重建并发布。
 
 > 授权踩坑记录：Cloudflare 的 `wrangler login` 走 localhost 回调且只给约 2 分钟窗口。
 > 本机**默认浏览器无法正常打开该授权页**，导致连续三次超时；

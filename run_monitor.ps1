@@ -136,11 +136,11 @@ function Publish-Snapshot {
 }
 
 function Publish-ExtraPages {
-    # Extra monitoring pages (config.w5.yaml, config.ctucan.yaml, ...) share the same scrape
-    # and the same price DB - one route fetch already contains every flight - so they only
-    # need re-rendering: zero extra requests, zero extra rate-limit budget.
-    # Each page publishes to its own Cloudflare Pages project.
-    foreach ($cfgName in @("config.w5.yaml", "config.ctucan.yaml")) {
+    # Only one page is monitored now (config.ctucan.yaml, which has publish.enabled=true and
+    # is republished by main.py at the end of each round), so there is nothing extra to do.
+    # The list below is kept so that adding another monitored page later needs no restructuring.
+    $extraConfigs = @()
+    foreach ($cfgName in $extraConfigs) {
         $cfgPath = Join-Path $root $cfgName
         if (-not (Test-Path $cfgPath)) { continue }
 
@@ -160,29 +160,6 @@ function Publish-ExtraPages {
         Remove-Item $tmpO, $tmpE -ErrorAction SilentlyContinue
         Write-Log ("[" + $tag + "] publish exit code " + $p.ExitCode)
     }
-}
-
-function Publish-SecondPage {
-    # The evening-flights page (config.w5.yaml) shares the same scrape and the same DB
-    # (one route fetch already contains every flight), so it only needs re-rendering -
-    # no extra requests, no extra rate-limit budget. It has its own Pages project.
-    $cfg2 = Join-Path $root "config.w5.yaml"
-    if (-not (Test-Path $cfg2)) { return }
-
-    $tmpOut2 = Join-Path $logDir "task.w5.stdout.tmp"
-    $tmpErr2 = Join-Path $logDir "task.w5.stderr.tmp"
-    Remove-Item $tmpOut2, $tmpErr2 -ErrorAction SilentlyContinue
-
-    $p2 = Start-Process -FilePath $py -ArgumentList @("publish.py", "-q", "-c", "config.w5.yaml") `
-        -WorkingDirectory $root -NoNewWindow -PassThru -Wait `
-        -RedirectStandardOutput $tmpOut2 -RedirectStandardError $tmpErr2
-    foreach ($f in @($tmpOut2, $tmpErr2)) {
-        if (Test-Path $f) {
-            Get-Content -Path $f -Encoding UTF8 | ForEach-Object { Write-Log ("  [w5] " + $_) }
-        }
-    }
-    Remove-Item $tmpOut2, $tmpErr2 -ErrorAction SilentlyContinue
-    Write-Log ("second page publish exit code " + $p2.ExitCode)
 }
 
 try {
