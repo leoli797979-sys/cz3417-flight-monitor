@@ -9,6 +9,7 @@ import argparse
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import yaml
@@ -70,6 +71,11 @@ def make_job(cfg: dict, logger, storage: PriceStorage, alerter: Alerter,
     pub_cfg = cfg.get("publish") or {}
     publish_enabled = bool(pub_cfg.get("enabled"))
     project_root = Path(__file__).resolve().parent
+    # 航向之间的间隔。为什么需要：去哪儿 touchInnerList 有全局限流（约 5 分钟/次），
+    # 同一轮里隔几秒连发两次请求，第二次基本必被 1999 拦截。
+    # 注意这里是「上一个航向抓完之后」再等，所以实际间隔恒 >= 该值，
+    # 不会因为前一航向跑久了（浏览器兜底要 1~2 分钟）而被压缩。
+    route_delay = int((cfg.get("schedule") or {}).get("route_delay_seconds", 0) or 0)
 
     crawlers = []
     for name in platforms:
@@ -81,7 +87,10 @@ def make_job(cfg: dict, logger, storage: PriceStorage, alerter: Alerter,
 
     def job():
         logger.info("===== 开始一轮抓取 =====")
-        for route in routes:
+        for idx, route in enumerate(routes):
+            if idx > 0 and route_delay > 0:
+                logger.info("[间隔] 等待 %d 秒再抓下一个航向（规避去哪儿全局限流）", route_delay)
+                time.sleep(route_delay)
             all_prices = []
             for c in crawlers:
                 prices = c.safe_fetch(route.from_code, route.to_code, route.dates)
