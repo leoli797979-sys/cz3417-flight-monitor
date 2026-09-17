@@ -13,12 +13,15 @@ on:
     branches: [main]
     paths:
       - "data/prices.db"
-      # 渲染逻辑或配置一变也应重新发布，否则站点会停留在旧模板
+      # 渲染逻辑、配置或本工作流自身一变也应重新发布，否则站点会停留在旧模板/旧结构。
+      # （踩过：改了 publish.yml 却没触发重建，根路径一直显示旧页面）
       - "report.py"
       - "core/flights.py"
+      - "config.ctucan.yaml"
       - "config.ci.yaml"
       - "config.w5.yaml"
       - "scripts/ci_summary.py"
+      - ".github/workflows/publish.yml"
   workflow_dispatch:
 
 permissions:
