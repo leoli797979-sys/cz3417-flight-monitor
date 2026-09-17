@@ -23,6 +23,7 @@ param(
     [string]$Config = "config.yaml",
     [switch]$NoWake,                     # by default the task wakes the PC from sleep/hibernate
     [int]$SleepAfterMinutes = 10,        # sleep again after the round if idle this long (0 = never)
+    [int]$RoundTimeoutMinutes = 5,       # watchdog: kill a round that runs longer than this
     [switch]$Uninstall,
     [switch]$Status,
     [switch]$RunNow
@@ -123,6 +124,9 @@ $psExe = (Get-Command powershell.exe -ErrorAction Stop).Source
 $argLine = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File `"$script`" -Config `"$Config`""
 if ($SleepAfterMinutes -gt 0) {
     $argLine += " -SleepAfter -IdleMinutes $SleepAfterMinutes"
+}
+if ($RoundTimeoutMinutes -gt 0) {
+    $argLine += " -RoundTimeoutMinutes $RoundTimeoutMinutes"
 }
 
 $action = New-ScheduledTaskAction `

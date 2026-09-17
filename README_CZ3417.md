@@ -442,3 +442,61 @@ powershell -ExecutionPolicy Bypass -File .\run_monitor.ps1 -SleepAfter -IdleMinu
 凭据存放于 `%APPDATA%\xdg.config\.wrangler\config\default.toml`。
 若要改用 API Token 方式（无需时间窗口），在 `cloudflare.env` 写入
 `CLOUDFLARE_API_TOKEN`（权限 Account → Cloudflare Pages → Edit）与 `CLOUDFLARE_ACCOUNT_ID` 即可。
+
+## 十一、2026-09-17 故障复盘：网页为什么"收不到最新推送"
+
+**现象**：外部网页停在 22:29 的旧数据，而库里已经有 22:53 的记录。
+
+**根因链**（一条条查出来的，不是猜的）：
+
+1. 22:53:30 那轮，去哪儿走 httpx 正常（2 秒、141 条已落库），接着携程**页面崩溃**
+   （`playwright ... Page crashed`），22:53:52 被 `except` 捕获。
+2. 之后 `base.py` 的 `finally: ctx.close()` **卡死**——关闭一个已经崩掉的持久化上下文，
+   Playwright 会一直等浏览器进程退出。整轮就此挂住（monitor.log 24 分钟零输出）。
+3. 任务计划有 `ExecutionTimeLimit=30 分钟`，挂到点才被强杀（结果码 `0xC000013A`）。
+   于是那一轮**报告没刷新、快照没推送** → 网页停在旧数据。
+
+**排除掉的假设**（查证过才敢说）：不是被睡回去杀的 —— 电源方案 `STANDBYIDLE=0x0`
+（从不自动睡眠），22:00–23:30 也没有任何 Kernel-Power 事件。
+
+**修复**：
+
+| 位置 | 改动 |
+| --- | --- |
+| `run_monitor.ps1` | 轮次看门狗 `-RoundTimeoutMinutes`（默认 12，任务里设 5）：超时 `taskkill /F /T` 杀整棵进程树，随后 `main.py --report-only` 用库里已有数据补报告+发布；快照推送改为每轮都试（无变更自动跳过）并重试 3 次；顺手修掉 `Start-Process -PassThru` 下 `ExitCode` 读不到（需 `EnableRaisingEvents`），日志里 `exit code` 不再为空 |
+| `main.py` | 抽出 `refresh_report_and_publish()`，新增 `--report-only`（只刷新+发布，不抓取） |
+| `crawlers/base.py` | Chromium 加 `--disable-gpu`：无头渲染进程崩溃基本都出在 GPU/ANGLE 初始化 |
+| `report.py` | 新增 `backfill_times()`：报文被反爬掺假时按班次补齐起降时刻（实测某轮 116 行缺 27 行，且恰好含监控班次，页面会渲染成 `--:--`） |
+
+## 十二、2026-09-18 ~ 09-25：把频率开到最大
+
+用户只需要监控到 **2026-09-25**（航班 09-27），因此这段时间不再保留额度：
+
+- **抓取**：`schedule.interval_minutes: 10`（每天 144 轮），计划任务已重装为 `PT10M`。
+- **不再自动睡眠**（`-SleepAfterMinutes 0`）：10 分钟一轮没必要睡回醒回，
+  144 次唤醒/天既折腾硬件又增加"唤醒后渲染崩溃"的机会。代价是这段时间电脑不睡。
+- **GitHub Pages 每轮重建**（无额度限制，是刷新最快的一路）→ 10 分钟一刷。
+  但它的触发方式是"推送 `data/prices.db`"，而 2 MB 的库按 10 分钟推一次，
+  8 天能堆出 1 GB 以上 git 历史，所以加了 `core/storage.py: prune()`：
+  **监控班次的历史全留**（页面曲线要用），非监控班次只留最近 3 批。
+  实测库从 **2.01 MB / 6253 行 → 0.17 MB / 431 行**（小 92%）。
+- **Cloudflare Pages 30 分钟一刷**（`min_interval_minutes: 30`、`max_per_day: 45`）：
+  免费版 500 次/月（本项目 09-17 才建），剩余 8.5 天按 45 次/天约 383 次，留约 100 次余量。
+  价格真变了这两个限制都不拦，会立刻发布。
+- **携程改为 30 分钟一次**（`schedule.platform_skip_minutes: {ctrip: 30}`）：
+  它每次都要开一次浏览器（~40 秒）、整晚都被 Whale Guard 挡、逐航班价格又与去哪儿
+  完全一致，10 分钟一轮跑它既拖慢轮次又更容易触发上面那个崩溃。
+  判据用 `crawl_attempts` 表记录"上次**尝试**时间"—— 不能用 `flight_prices` 的最新时间，
+  因为平台被挡时一条都存不下来，会把"刚抓过"误判成"很久没抓"从而每轮重试。
+
+**qunar 两处新防护**（当晚真踩到）：
+
+1. **登录页令牌不许入库**：23:45 那次页面被跳到 `user.qunar.com/mobile/login.jsp`，
+   请求拦截器照样抓到一个 Bella，代码却把它当"已刷新"存了下来 ——
+   缓存被毒化后每轮 httpx 必然 1999，而浏览器回退又被登录墙挡住，从此拿不到真令牌。
+   现在只有**真的拦到 touchInnerList 响应**才写缓存。
+2. **登录墙冷却 30 分钟**：去哪儿偶发登录墙（当晚出现 3 次，每次 ~50 分钟内自行恢复），
+   撞墙后暂停浏览器握手，避免用 10 分钟一轮的节奏反复撞墙把风控喂得更狠；
+   冷却期间 httpx 仍照常尝试（有效令牌往往能绕过页面级风控）。
+
+若登录墙长时间不恢复，需要人工登录一次：`python main.py --login qunar`（可见浏览器 + 手机验证码）。

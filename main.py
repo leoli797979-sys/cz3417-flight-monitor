@@ -113,6 +113,8 @@ def make_job(cfg: dict, logger, storage: PriceStorage, alerter: Alerter,
     # 注意这里是「上一个航向抓完之后」再等，所以实际间隔恒 >= 该值，
     # 不会因为前一航向跑久了（浏览器兜底要 1~2 分钟）而被压缩。
     route_delay = int((cfg.get("schedule") or {}).get("route_delay_seconds", 0) or 0)
+    # 每个平台各自的最小抓取间隔（分钟），见下面 job() 里的说明
+    skip_cfg = (cfg.get("schedule") or {}).get("platform_skip_minutes") or {}
 
     crawlers = []
     for name in platforms:
@@ -130,11 +132,32 @@ def make_job(cfg: dict, logger, storage: PriceStorage, alerter: Alerter,
                 time.sleep(route_delay)
             all_prices = []
             for c in crawlers:
+                # 平台各自的最小间隔：携程整轮要开一次浏览器（~40 秒）且常被风控挡，
+                # 逐航班价格又与去哪儿一致（实测两边完全吻合），所以不必每轮都跑 ——
+                # 尤其在 10 分钟一轮的节奏下，跑它既拖慢轮次又更容易触发浏览器崩溃。
+                skip_min = int((skip_cfg.get(c.name, 0) or 0))
+                if skip_min > 0:
+                    age = storage.last_batch_age_minutes(c.name)
+                    if age < skip_min:
+                        logger.info("[跳过] %s 距上次抓取仅 %.0f 分钟（阈值 %d 分钟），本轮不抓",
+                                    c.name, age, skip_min)
+                        continue
+                storage.mark_attempt(c.name)
                 prices = c.safe_fetch(route.from_code, route.to_code, route.dates)
                 storage.save_many(prices)
                 all_prices.extend(prices)
             alerter.check_and_alert(route, all_prices)
         logger.info("===== 本轮抓取结束 =====")
+
+        # 清掉用不到的旧批次：库每轮都会推给云端，体积直接决定推送（也就是网页刷新）能开多快
+        watch_all = [w for r in routes for w in (r.watch_flights or [])]
+        try:
+            removed = storage.prune(keep_batches=3, watch=watch_all)
+            if removed:
+                logger.info("[清理] 删除 %d 行非监控班次的旧记录（保留最近 3 批），库现为 %.2f MB",
+                            removed, os.path.getsize(storage.db_path) / 1024 / 1024)
+        except Exception as e:
+            logger.warning("[清理] 失败(不影响抓取): %s", e)
 
         # 每轮结束后刷新 HTML 报告并发布（定时任务下外部链接自动保持最新）
         refresh_report_and_publish(cfg, logger, storage, config_path)

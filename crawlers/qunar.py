@@ -107,6 +107,35 @@ class QunarCrawler(BaseCrawler):
         # 触屏版登录入口，登录后 cookie 作用于 touch.qunar.com，与抓取同源
         return "https://user.qunar.com/mobile/login.jsp"
 
+    # 登录墙冷却：去哪儿偶尔会把页面跳到登录墙（实测 2026-09-17 出现 3 次，
+    # 都在 ~50 分钟内自行恢复）。撞墙后如果还按 10 分钟一轮的节奏反复跑浏览器握手，
+    # 只会把风控喂得更狠，所以撞墙就歇一段时间。冷却期间 httpx 仍然照常尝试 ——
+    # 登录墙挡的是页面导航，拿着有效令牌打接口往往还能拿到数据。
+    WALL_COOLDOWN_MIN = 30
+
+    @property
+    def _wall_path(self) -> str:
+        return os.path.join(self.user_data_root, self.name, "wall_until.json")
+
+    def _wall_cooldown_left(self) -> float:
+        """距离登录墙冷却结束还有多少秒（0 = 不在冷却中）。"""
+        try:
+            with open(self._wall_path, "r", encoding="utf-8") as f:
+                until = float((json.load(f) or {}).get("until", 0) or 0)
+        except Exception:
+            return 0.0
+        return max(0.0, until - time.time())
+
+    def _start_wall_cooldown(self, minutes: int = 0) -> None:
+        minutes = int(minutes or self.WALL_COOLDOWN_MIN)
+        os.makedirs(os.path.dirname(self._wall_path), exist_ok=True)
+        try:
+            with open(self._wall_path, "w", encoding="utf-8") as f:
+                json.dump({"until": time.time() + minutes * 60,
+                           "since": time.strftime("%Y-%m-%d %H:%M:%S")}, f)
+        except Exception:
+            pass
+
     # ==================== 主流程 ====================
     def fetch(self, from_city: str, to_city: str, dates: List[str]) -> List[FlightPrice]:
         """逐航班抓取：优先解析出每架航班的价（可据此监控指定航班号）。
@@ -273,6 +302,15 @@ class QunarCrawler(BaseCrawler):
         """
         from_name = self.CITY_NAME.get(from_city.upper(), from_city)
         to_name = self.CITY_NAME.get(to_city.upper(), to_city)
+
+        left = self._wall_cooldown_left()
+        if left > 0:
+            self.logger.warning(
+                "[qunar] 处于登录墙冷却中（还剩 %.0f 分钟），本轮跳过浏览器握手；"
+                "若长时间不恢复，需要人工登录一次：python main.py --login qunar",
+                left / 60)
+            return None
+
         url = self.URL_TPL.format(
             from_name=urllib.parse.quote(from_name),
             to_name=urllib.parse.quote(to_name),
@@ -342,11 +380,28 @@ class QunarCrawler(BaseCrawler):
                 snap["cookies"] = {c["name"]: c["value"] for c in ck}
             except Exception:
                 snap["cookies"] = {}
+            try:
+                snap["page_url"] = page.url
+            except Exception:
+                snap["page_url"] = ""
 
-        # 存 token（供下次 httpx）
-        if snap["headers"] and snap["body_template"] and snap["body_template"].get("Bella"):
-            self._save_token(snap)
-            self.logger.info("[qunar] token 已刷新，有效期 %dh", self.TOKEN_TTL_S // 3600)
+        # 存 token（供下次 httpx）。**只有真的拿到 touchInnerList 响应时才存。**
+        # 踩过的坑（2026-09-17 23:45）：页面被跳到登录页 user.qunar.com/mobile/login.jsp 时，
+        # 请求拦截器照样能抓到一个 Bella，但那是登录页的令牌 —— 存下来会毒化缓存，
+        # 之后每轮 httpx 必然 1999，而浏览器回退又被登录墙挡住，从此再也拿不到真令牌。
+        on_login_wall = "login.jsp" in (snap.get("page_url") or "")
+        if snap["response_text"] and not on_login_wall:
+            if snap["headers"] and snap["body_template"] and snap["body_template"].get("Bella"):
+                self._save_token(snap)
+                self.logger.info("[qunar] token 已刷新，有效期 %dh", self.TOKEN_TTL_S // 3600)
+        elif on_login_wall:
+            self._start_wall_cooldown(int(self.config.get("wall_cooldown_minutes", 0) or 0))
+            self.logger.warning(
+                "[qunar] 被跳到登录页，本次不写入 token（避免毒化缓存），"
+                "并进入 %d 分钟冷却；若长时间不恢复需要人工登录一次：python main.py --login qunar",
+                int(self.config.get("wall_cooldown_minutes", 0) or self.WALL_COOLDOWN_MIN))
+        else:
+            self.logger.warning("[qunar] 未拿到列表响应，本次不写入 token")
 
         # 解析交给 fetch() 的分层解析；这里只负责带回原始响应
         if snap["response_text"]:

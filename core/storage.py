@@ -34,6 +34,14 @@ CREATE TABLE IF NOT EXISTS alert_state (
     last_price  REAL NOT NULL,
     last_sent_at TEXT NOT NULL
 );
+
+-- 每个平台"上次尝试抓取"的时间。注意不能拿 flight_prices 里的最新时间当判据：
+-- 平台被风控挡住时它一条都存不下来，用最新数据会把"刚抓过"误判成"很久没抓"，
+-- 于是每轮都重试（携程每次要开一次浏览器 ~40 秒，正是这条坑）。
+CREATE TABLE IF NOT EXISTS crawl_attempts (
+    platform         TEXT PRIMARY KEY,
+    last_attempt_at  TEXT NOT NULL
+);
 """
 
 
@@ -115,3 +123,60 @@ class PriceStorage:
     def clear_alert_state(self, route_key: str):
         with self._conn() as c:
             c.execute("DELETE FROM alert_state WHERE route_key=?", (route_key,))
+
+    def last_batch_age_minutes(self, platform: str) -> float:
+        """该平台"上次尝试抓取"距今多少分钟（没有记录则返回一个很大的数）。"""
+        with self._conn() as c:
+            row = c.execute(
+                "SELECT last_attempt_at FROM crawl_attempts WHERE platform=?",
+                (platform,)).fetchone()
+        if not row or not row["last_attempt_at"]:
+            return 1e9
+        try:
+            from datetime import datetime
+            t = datetime.strptime(str(row["last_attempt_at"])[:19], "%Y-%m-%d %H:%M:%S")
+            return (datetime.now() - t).total_seconds() / 60.0
+        except Exception:
+            return 1e9
+
+    def mark_attempt(self, platform: str):
+        """记录一次抓取尝试（不管成没成功）。"""
+        from datetime import datetime
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with self._conn() as c:
+            c.execute(
+                "INSERT INTO crawl_attempts (platform, last_attempt_at) VALUES (?,?) "
+                "ON CONFLICT(platform) DO UPDATE SET last_attempt_at=excluded.last_attempt_at",
+                (platform, now))
+
+    def prune(self, keep_batches: int = 3, watch: Optional[List[str]] = None) -> int:
+        """删掉"非监控班次"的旧批次，只保留最近 keep_batches 批；监控班次的历史全留。
+
+        为什么需要：页面只用到"最近一批全量航班 + 监控班次的完整价格曲线"，而每轮会写进
+        ~150 行。定时任务要把 prices.db 推给云端触发 GitHub Pages 重建（那一路没有额度
+        限制，是刷新最快的一路），但库越大每个 git 对象越大 —— 2 MB 的库按 10 分钟推一次，
+        8 天就能堆出 1 GB 以上的仓库历史。清掉用不到的旧批次后，库稳定在几百 KB。
+        """
+        watch = [str(w).upper().replace(" ", "") for w in (watch or []) if str(w).strip()]
+        marks = ",".join("?" for _ in watch)
+        not_watch = (f"UPPER(REPLACE(flight_no,' ','')) NOT IN ({marks})" if watch
+                     else "1=1")
+        with self._conn() as c:
+            cut = c.execute(
+                f"SELECT MIN(fetched_at) FROM (SELECT DISTINCT fetched_at "
+                f"FROM flight_prices WHERE {not_watch} "
+                f"ORDER BY fetched_at DESC LIMIT ?)",
+                (*watch, keep_batches)).fetchone()[0]
+            if not cut:
+                return 0
+            removed = c.execute(
+                f"DELETE FROM flight_prices WHERE {not_watch} AND fetched_at < ?",
+                (*watch, cut)).rowcount
+        if removed:
+            # VACUUM 必须在事务之外执行，所以单独开一个不做隐式事务的连接
+            conn = sqlite3.connect(self.db_path, isolation_level=None)
+            try:
+                conn.execute("VACUUM")
+            finally:
+                conn.close()
+        return removed
