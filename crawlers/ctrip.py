@@ -52,8 +52,13 @@ class CtripCrawler(BaseCrawler):
     def _detect_block(captured: list, page=None) -> str:
         """识别携程风控拦截。
 
-        实测被拦时列表接口返回的正文就是纯文本 ``whaleguard block``，
-        同时页面会渲染成验证码墙（HTML 里出现 captcha）。
+        判据只认**接口返回的内容**：
+          * 列表接口被拦时返回的正文就是纯文本 ``whaleguard block``
+          * 长度异常短（<200 字节）且含 block
+
+        注意：**不要**用"页面 HTML 里出现 captcha"来判定——携程页面本身就会引用
+        ``captcha.min.js`` / ``jigsawCaptcha`` 等脚本（正常页面也有），
+        用它判定会产生假阳性：实测出现过"打了被拦日志、但同一轮解析到 155 架航班"的情况。
         """
         for item in captured:
             text = (item.get("text") or "").strip()
@@ -62,12 +67,6 @@ class CtripCrawler(BaseCrawler):
                 return f"接口返回风控: {text[:60]}"
             if len(text) < 200 and "block" in low:
                 return f"接口返回: {text[:60]}"
-        try:
-            html = (page.content() if page is not None else "") or ""
-        except Exception:
-            html = ""
-        if "captcha" in html.lower():
-            return "页面出现验证码墙(captcha)"
         return ""
 
     def fetch(self, from_city: str, to_city: str, dates: List[str]) -> List[FlightPrice]:

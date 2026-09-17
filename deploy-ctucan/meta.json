@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-09-17 21:05:18",
-  "last_fetch": "2026-09-17 20:55:09",
+  "updated_at": "2026-09-17 22:01:36",
+  "last_fetch": "2026-09-17 21:54:04",
   "date": "2026-09-27",
   "route": {
     "from": "CTU",
@@ -18,7 +18,7 @@
   "min_price": 770.0,
   "max_price": 770.0,
   "avg_price": 770.0,
-  "sample_count": 1,
+  "sample_count": 5,
   "flights": [
     {
       "flight_no": "CZ3444",
@@ -33,7 +33,7 @@
       "min_price": 770.0,
       "max_price": 770.0,
       "avg_price": 770.0,
-      "sample_count": 1,
+      "sample_count": 5,
       "below_threshold": false,
       "cheapest_among_watched": true
     },
@@ -50,7 +50,7 @@
       "min_price": 860.0,
       "max_price": 860.0,
       "avg_price": 860.0,
-      "sample_count": 1,
+      "sample_count": 5,
       "below_threshold": false,
       "cheapest_among_watched": false
     }
@@ -58,13 +58,13 @@
   "cheapest_flight": "CZ3444",
   "cheapest_price": 770.0,
   "missing_flights": [],
-  "flight_count": 141,
+  "flight_count": 162,
   "source": [
     "qunar",
     "ctrip"
   ],
   "platform_status": {
-    "qunar": 141,
-    "ctrip": 0
+    "qunar": 146,
+    "ctrip": 155
   }
 }

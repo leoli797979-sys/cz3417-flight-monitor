@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-17 21:05:18",
-  "last_fetch": "2026-09-17 20:55:09",
+  "generated_at": "2026-09-17 22:01:36",
+  "last_fetch": "2026-09-17 21:54:04",
   "date": "2026-09-27",
   "route": {
     "from": "CTU",
@@ -27,7 +27,7 @@
       "min_price": 770.0,
       "max_price": 770.0,
       "avg_price": 770.0,
-      "sample_count": 1,
+      "sample_count": 5,
       "below_threshold": false,
       "cheapest_among_watched": true
     },
@@ -44,7 +44,7 @@
       "min_price": 860.0,
       "max_price": 860.0,
       "avg_price": 860.0,
-      "sample_count": 1,
+      "sample_count": 5,
       "below_threshold": false,
       "cheapest_among_watched": false
     }
@@ -62,7 +62,7 @@
     "min_price": 770.0,
     "max_price": 770.0,
     "avg_price": 770.0,
-    "sample_count": 1,
+    "sample_count": 5,
     "below_threshold": false,
     "cheapest_among_watched": true
   },
@@ -79,7 +79,7 @@
     "min_price": 770.0,
     "max_price": 770.0,
     "avg_price": 770.0,
-    "sample_count": 1,
+    "sample_count": 5,
     "below_threshold": false,
     "cheapest_among_watched": true
   },
@@ -96,18 +96,57 @@
     "price": 400.0,
     "platform": "qunar",
     "route_level": false,
-    "fetched_at": "2026-09-17 20:55:09",
+    "fetched_at": "2026-09-17 21:51:56",
     "watched": false,
     "price_suspect": false,
     "platforms": [
       {
         "platform": "qunar",
         "price": 400.0
+      },
+      {
+        "platform": "qunar",
+        "price": 400.0
+      },
+      {
+        "platform": "ctrip",
+        "price": 400.0
       }
     ]
   },
-  "flight_count": 141,
+  "flight_count": 162,
   "flights": [
+    {
+      "flight_no": "MF7490",
+      "airline": "厦门航空",
+      "aircraft": "空客320(中)",
+      "depart_time": "16:05",
+      "arrive_time": "18:35",
+      "dep_airport": "天府T2(TFU)",
+      "arr_airport": "白云T3(CAN)",
+      "dep_airport_id": "TFU",
+      "arr_airport_id": "CAN",
+      "price": 172.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:53:26",
+      "watched": false,
+      "price_suspect": true,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 172.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 875.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1720.0
+        }
+      ]
+    },
     {
       "flight_no": "ZH9442",
       "airline": "深圳航空",
@@ -121,35 +160,20 @@
       "price": 400.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 400.0
-        }
-      ]
-    },
-    {
-      "flight_no": "EU2235",
-      "airline": "成都航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "07:15",
-      "arrive_time": "09:50",
-      "dep_airport": "双流T2(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 400.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
+          "price": 400.0
+        },
+        {
+          "platform": "ctrip",
           "price": 400.0
         }
       ]
@@ -167,12 +191,20 @@
       "price": 429.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 429.0
+        },
+        {
+          "platform": "qunar",
+          "price": 429.0
+        },
+        {
+          "platform": "ctrip",
           "price": 429.0
         }
       ]
@@ -190,35 +222,20 @@
       "price": 450.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 450.0
-        }
-      ]
-    },
-    {
-      "flight_no": "3U8739",
-      "airline": "四川航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "07:30",
-      "arrive_time": "10:00",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 450.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
+          "price": 450.0
+        },
+        {
+          "platform": "ctrip",
           "price": 450.0
         }
       ]
@@ -236,12 +253,20 @@
       "price": 450.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 450.0
+        },
+        {
+          "platform": "qunar",
+          "price": 450.0
+        },
+        {
+          "platform": "ctrip",
           "price": 450.0
         }
       ]
@@ -259,12 +284,51 @@
       "price": 450.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 450.0
+        },
+        {
+          "platform": "qunar",
+          "price": 450.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 450.0
+        }
+      ]
+    },
+    {
+      "flight_no": "3U8739",
+      "airline": "四川航空",
+      "aircraft": "空客321(中)",
+      "depart_time": "07:30",
+      "arrive_time": "10:00",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 450.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 450.0
+        },
+        {
+          "platform": "qunar",
+          "price": 450.0
+        },
+        {
+          "platform": "ctrip",
           "price": 450.0
         }
       ]
@@ -282,12 +346,20 @@
       "price": 460.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 460.0
+        },
+        {
+          "platform": "qunar",
+          "price": 460.0
+        },
+        {
+          "platform": "ctrip",
           "price": 460.0
         }
       ]
@@ -295,30 +367,7 @@
     {
       "flight_no": "CA5581",
       "airline": "国际航空",
-      "aircraft": "",
-      "depart_time": "",
-      "arrive_time": "10:00",
-      "dep_airport": "双流(CTU)",
-      "arr_airport": "白云T3(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 500.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
-        {
-          "platform": "qunar",
-          "price": 500.0
-        }
-      ]
-    },
-    {
-      "flight_no": "GJ5389",
-      "airline": "长龙航空",
-      "aircraft": "",
+      "aircraft": "空客330(大)",
       "depart_time": "07:30",
       "arrive_time": "10:00",
       "dep_airport": "双流T2(CTU)",
@@ -328,10 +377,45 @@
       "price": 500.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
+        {
+          "platform": "qunar",
+          "price": 500.0
+        },
+        {
+          "platform": "qunar",
+          "price": 500.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 910.0
+        }
+      ]
+    },
+    {
+      "flight_no": "KY6739",
+      "airline": "昆明航空",
+      "aircraft": "空客330(大)",
+      "depart_time": "07:30",
+      "arrive_time": "10:00",
+      "dep_airport": "双流T2(CTU)",
+      "arr_airport": "白云T3(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 500.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 500.0
+        },
         {
           "platform": "qunar",
           "price": 500.0
@@ -351,19 +435,27 @@
       "price": 500.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 500.0
+        },
+        {
+          "platform": "qunar",
+          "price": 500.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 500.0
         }
       ]
     },
     {
-      "flight_no": "KY6739",
-      "airline": "昆明航空",
+      "flight_no": "GJ5389",
+      "airline": "长龙航空",
       "aircraft": "空客330(大)",
       "depart_time": "07:30",
       "arrive_time": "10:00",
@@ -374,13 +466,21 @@
       "price": 500.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 500.0
+        },
+        {
+          "platform": "qunar",
+          "price": 500.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 750.0
         }
       ]
     },
@@ -397,36 +497,83 @@
       "price": 510.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 510.0
+        },
+        {
+          "platform": "qunar",
+          "price": 510.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 510.0
+        }
+      ]
+    },
+    {
+      "flight_no": "EU2235",
+      "airline": "成都航空",
+      "aircraft": "空客321(中)",
+      "depart_time": "07:15",
+      "arrive_time": "09:50",
+      "dep_airport": "双流T2(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 520.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 520.0
+        },
+        {
+          "platform": "qunar",
+          "price": 520.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 520.0
         }
       ]
     },
     {
       "flight_no": "HU7152",
       "airline": "海南航空",
-      "aircraft": "空客32N",
-      "depart_time": "12:00",
-      "arrive_time": "14:40",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云T3(CAN)",
-      "dep_airport_id": "TFU",
-      "arr_airport_id": "CAN",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
       "price": 570.0,
-      "platform": "qunar",
+      "platform": "ctrip",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:54:04",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
-          "platform": "qunar",
+          "platform": "ctrip",
           "price": 570.0
+        },
+        {
+          "platform": "qunar",
+          "price": 579.0
+        },
+        {
+          "platform": "qunar",
+          "price": 579.0
         }
       ]
     },
@@ -443,12 +590,20 @@
       "price": 579.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 579.0
+        },
+        {
+          "platform": "qunar",
+          "price": 579.0
+        },
+        {
+          "platform": "ctrip",
           "price": 579.0
         }
       ]
@@ -466,12 +621,20 @@
       "price": 610.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 610.0
+        },
+        {
+          "platform": "qunar",
+          "price": 610.0
+        },
+        {
+          "platform": "ctrip",
           "price": 610.0
         }
       ]
@@ -489,12 +652,20 @@
       "price": 620.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 620.0
+        },
+        {
+          "platform": "qunar",
+          "price": 620.0
+        },
+        {
+          "platform": "ctrip",
           "price": 620.0
         }
       ]
@@ -512,19 +683,58 @@
       "price": 627.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 627.0
+        },
+        {
+          "platform": "qunar",
+          "price": 627.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 660.0
         }
       ]
     },
     {
-      "flight_no": "3U5185",
-      "airline": "四川航空",
+      "flight_no": "HU7252",
+      "airline": "海南航空",
+      "aircraft": "波音737(中)",
+      "depart_time": "19:15",
+      "arrive_time": "21:40",
+      "dep_airport": "天府T2(TFU)",
+      "arr_airport": "白云T3(CAN)",
+      "dep_airport_id": "TFU",
+      "arr_airport_id": "CAN",
+      "price": 640.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 640.0
+        },
+        {
+          "platform": "qunar",
+          "price": 640.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 640.0
+        }
+      ]
+    },
+    {
+      "flight_no": "KN6169",
+      "airline": "中国联合航空",
       "aircraft": "空客320(中)",
       "depart_time": "09:00",
       "arrive_time": "11:30",
@@ -535,20 +745,28 @@
       "price": 660.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 660.0
+        },
+        {
+          "platform": "qunar",
+          "price": 660.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 770.0
         }
       ]
     },
     {
-      "flight_no": "KN6169",
-      "airline": "中国联合航空",
-      "aircraft": "",
+      "flight_no": "MF3727",
+      "airline": "厦门航空",
+      "aircraft": "空客320(中)",
       "depart_time": "09:00",
       "arrive_time": "11:30",
       "dep_airport": "天府T2(TFU)",
@@ -558,35 +776,74 @@
       "price": 660.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 660.0
+        },
+        {
+          "platform": "qunar",
+          "price": 660.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 675.0
         }
       ]
     },
     {
-      "flight_no": "MF3727",
-      "airline": "厦门航空",
-      "aircraft": "",
-      "depart_time": "",
-      "arrive_time": "11:30",
-      "dep_airport": "天府(TFU)",
+      "flight_no": "ZH9446",
+      "airline": "深圳航空",
+      "aircraft": "波音737(中)",
+      "depart_time": "18:55",
+      "arrive_time": "21:30",
+      "dep_airport": "天府T2(TFU)",
       "arr_airport": "白云T3(CAN)",
       "dep_airport_id": "TFU",
       "arr_airport_id": "CAN",
       "price": 660.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 660.0
+        },
+        {
+          "platform": "qunar",
+          "price": 660.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 660.0
+        }
+      ]
+    },
+    {
+      "flight_no": "3U5185",
+      "airline": "四川航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 660.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
           "price": 660.0
         }
       ]
@@ -604,12 +861,20 @@
       "price": 680.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 680.0
+        },
+        {
+          "platform": "qunar",
+          "price": 680.0
+        },
+        {
+          "platform": "ctrip",
           "price": 680.0
         }
       ]
@@ -627,35 +892,175 @@
       "price": 700.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 700.0
+        },
+        {
+          "platform": "qunar",
+          "price": 700.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 700.0
+        }
+      ]
+    },
+    {
+      "flight_no": "3U1150",
+      "airline": "四川航空",
+      "aircraft": "空客321(中)",
+      "depart_time": "09:00",
+      "arrive_time": "11:40",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 700.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 700.0
+        },
+        {
+          "platform": "qunar",
+          "price": 700.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 770.0
+        }
+      ]
+    },
+    {
+      "flight_no": "MF1193",
+      "airline": "厦门航空",
+      "aircraft": "空客321(中)",
+      "depart_time": "09:00",
+      "arrive_time": "11:40",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 700.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 700.0
+        },
+        {
+          "platform": "qunar",
+          "price": 700.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 885.0
+        }
+      ]
+    },
+    {
+      "flight_no": "3U8733",
+      "airline": "四川航空",
+      "aircraft": "空客321(中)",
+      "depart_time": "10:30",
+      "arrive_time": "13:00",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 760.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 760.0
+        },
+        {
+          "platform": "qunar",
+          "price": 760.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 760.0
         }
       ]
     },
     {
       "flight_no": "ZH9440",
       "airline": "深圳航空",
-      "aircraft": "空客319(中)",
-      "depart_time": "11:55",
+      "aircraft": "空客320(中)",
+      "depart_time": "11:45",
       "arrive_time": "13:55",
       "dep_airport": "双流T2(CTU)",
-      "arr_airport": "白云(CAN)",
+      "arr_airport": "白云T3(CAN)",
       "dep_airport_id": "CTU",
       "arr_airport_id": "CAN",
       "price": 760.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 760.0
+        },
+        {
+          "platform": "qunar",
+          "price": 760.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 760.0
+        }
+      ]
+    },
+    {
+      "flight_no": "CA4317",
+      "airline": "国际航空",
+      "aircraft": "空客319(中)",
+      "depart_time": "11:55",
+      "arrive_time": "14:35",
+      "dep_airport": "双流T2(CTU)",
+      "arr_airport": "白云T3(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 760.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 760.0
+        },
+        {
+          "platform": "qunar",
+          "price": 760.0
+        },
+        {
+          "platform": "ctrip",
           "price": 760.0
         }
       ]
@@ -673,10 +1078,14 @@
       "price": 760.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
+        {
+          "platform": "qunar",
+          "price": 760.0
+        },
         {
           "platform": "qunar",
           "price": 760.0
@@ -696,10 +1105,14 @@
       "price": 760.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
+        {
+          "platform": "qunar",
+          "price": 760.0
+        },
         {
           "platform": "qunar",
           "price": 760.0
@@ -707,11 +1120,11 @@
       ]
     },
     {
-      "flight_no": "3U8733",
-      "airline": "四川航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "10:30",
-      "arrive_time": "13:00",
+      "flight_no": "CZ3438",
+      "airline": "南方航空",
+      "aircraft": "波音737(中)",
+      "depart_time": "13:00",
+      "arrive_time": "15:35",
       "dep_airport": "双流T1(CTU)",
       "arr_airport": "白云T2(CAN)",
       "dep_airport_id": "CTU",
@@ -719,13 +1132,52 @@
       "price": 760.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 760.0
+        },
+        {
+          "platform": "qunar",
+          "price": 760.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 760.0
+        }
+      ]
+    },
+    {
+      "flight_no": "3U1168",
+      "airline": "四川航空",
+      "aircraft": "波音737(中)",
+      "depart_time": "13:00",
+      "arrive_time": "15:35",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 760.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 760.0
+        },
+        {
+          "platform": "qunar",
+          "price": 760.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 770.0
         }
       ]
     },
@@ -742,36 +1194,21 @@
       "price": 760.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 760.0
-        }
-      ]
-    },
-    {
-      "flight_no": "CZ9083",
-      "airline": "南方航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "07:00",
-      "arrive_time": "09:25",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 770.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
-          "price": 770.0
+          "price": 760.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 760.0
         }
       ]
     },
@@ -788,12 +1225,20 @@
       "price": 770.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
           "price": 770.0
         }
       ]
@@ -811,35 +1256,20 @@
       "price": 770.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 770.0
-        }
-      ]
-    },
-    {
-      "flight_no": "GJ5133",
-      "airline": "长龙航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "07:15",
-      "arrive_time": "09:50",
-      "dep_airport": "双流T2(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 770.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
           "price": 770.0
         }
       ]
@@ -857,12 +1287,20 @@
       "price": 770.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
           "price": 770.0
         }
       ]
@@ -880,12 +1318,20 @@
       "price": 770.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
           "price": 770.0
         }
       ]
@@ -903,12 +1349,20 @@
       "price": 770.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
           "price": 770.0
         }
       ]
@@ -926,35 +1380,20 @@
       "price": 770.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 770.0
-        }
-      ]
-    },
-    {
-      "flight_no": "MU3275",
-      "airline": "东方航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "08:00",
-      "arrive_time": "10:25",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "TFU",
-      "arr_airport_id": "CAN",
-      "price": 770.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
           "price": 770.0
         }
       ]
@@ -972,12 +1411,20 @@
       "price": 770.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
           "price": 770.0
         }
       ]
@@ -995,12 +1442,20 @@
       "price": 770.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
           "price": 770.0
         }
       ]
@@ -1018,104 +1473,20 @@
       "price": 770.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 770.0
-        }
-      ]
-    },
-    {
-      "flight_no": "3U1142",
-      "airline": "四川航空",
-      "aircraft": "波音737(中)",
-      "depart_time": "12:00",
-      "arrive_time": "14:40",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 770.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
           "price": 770.0
-        }
-      ]
-    },
-    {
-      "flight_no": "3U1168",
-      "airline": "四川航空",
-      "aircraft": "波音737(中)",
-      "depart_time": "13:00",
-      "arrive_time": "15:35",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 770.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
-          "platform": "qunar",
-          "price": 770.0
-        }
-      ]
-    },
-    {
-      "flight_no": "CZ3444",
-      "airline": "南方航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "15:00",
-      "arrive_time": "17:30",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 770.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": true,
-      "price_suspect": false,
-      "platforms": [
-        {
-          "platform": "qunar",
-          "price": 770.0
-        }
-      ]
-    },
-    {
-      "flight_no": "3U1150",
-      "airline": "四川航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "09:00",
-      "arrive_time": "11:40",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 770.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
-        {
-          "platform": "qunar",
+          "platform": "ctrip",
           "price": 770.0
         }
       ]
@@ -1133,81 +1504,353 @@
       "price": 770.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 770.0
         }
       ]
     },
     {
-      "flight_no": "MF1193",
-      "airline": "厦门航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "09:00",
-      "arrive_time": "11:40",
+      "flight_no": "3U1142",
+      "airline": "四川航空",
+      "aircraft": "波音737(中)",
+      "depart_time": "12:00",
+      "arrive_time": "14:40",
       "dep_airport": "双流T1(CTU)",
       "arr_airport": "白云T2(CAN)",
       "dep_airport_id": "CTU",
       "arr_airport_id": "CAN",
-      "price": 780.0,
+      "price": 770.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
-          "price": 780.0
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 770.0
         }
       ]
     },
     {
-      "flight_no": "MF4997",
-      "airline": "厦门航空",
+      "flight_no": "CZ3444",
+      "airline": "南方航空",
       "aircraft": "空客320(中)",
-      "depart_time": "07:00",
-      "arrive_time": "09:25",
-      "dep_airport": "双流T1(TFU)",
+      "depart_time": "15:00",
+      "arrive_time": "17:30",
+      "dep_airport": "双流T1(CTU)",
       "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "TFU",
+      "dep_airport_id": "CTU",
       "arr_airport_id": "CAN",
-      "price": 785.0,
+      "price": 770.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": true,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 770.0
+        }
+      ]
+    },
+    {
+      "flight_no": "3U1172",
+      "airline": "四川航空",
+      "aircraft": "其他机型",
+      "depart_time": "15:00",
+      "arrive_time": "17:30",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 770.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
-          "price": 785.0
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 770.0
+        }
+      ]
+    },
+    {
+      "flight_no": "CZ9083",
+      "airline": "南方航空",
+      "aircraft": "空客320(中)",
+      "depart_time": "07:00",
+      "arrive_time": "09:25",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 770.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 770.0
+        }
+      ]
+    },
+    {
+      "flight_no": "MU3275",
+      "airline": "东方航空",
+      "aircraft": "空客321(中)",
+      "depart_time": "08:00",
+      "arrive_time": "10:25",
+      "dep_airport": "天府T2(TFU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "TFU",
+      "arr_airport_id": "CAN",
+      "price": 770.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 770.0
+        }
+      ]
+    },
+    {
+      "flight_no": "MF1183",
+      "airline": "厦门航空",
+      "aircraft": "波音737(中)",
+      "depart_time": "12:00",
+      "arrive_time": "14:40",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 770.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 770.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 885.0
+        }
+      ]
+    },
+    {
+      "flight_no": "GJ5133",
+      "airline": "长龙航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 770.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 890.0
+        },
+        {
+          "platform": "qunar",
+          "price": 890.0
+        }
+      ]
+    },
+    {
+      "flight_no": "GJ3433",
+      "airline": "长龙航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 770.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1120.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1120.0
+        }
+      ]
+    },
+    {
+      "flight_no": "GJ3431",
+      "airline": "长龙航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 770.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 770.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1080.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1080.0
+        }
+      ]
+    },
+    {
+      "flight_no": "MU5854",
+      "airline": "东方航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 770.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 770.0
         }
       ]
     },
     {
       "flight_no": "MF4707",
       "airline": "厦门航空",
-      "aircraft": "",
-      "depart_time": "",
+      "aircraft": "空客321(中)",
+      "depart_time": "08:00",
       "arrive_time": "10:25",
-      "dep_airport": "天府T2(CTU)",
+      "dep_airport": "天府T2(TFU)",
       "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
+      "dep_airport_id": "TFU",
       "arr_airport_id": "CAN",
       "price": 785.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 785.0
+        },
+        {
+          "platform": "qunar",
+          "price": 785.0
+        },
+        {
+          "platform": "ctrip",
           "price": 785.0
         }
       ]
@@ -1218,43 +1861,51 @@
       "aircraft": "空客321(中)",
       "depart_time": "10:30",
       "arrive_time": "13:00",
-      "dep_airport": "双流T1(TFU)",
+      "dep_airport": "双流T1(CTU)",
       "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "TFU",
+      "dep_airport_id": "CTU",
       "arr_airport_id": "CAN",
-      "price": 790.0,
+      "price": 785.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
-          "price": 790.0
+          "price": 785.0
+        },
+        {
+          "platform": "qunar",
+          "price": 785.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 785.0
         }
       ]
     },
     {
-      "flight_no": "TV6778",
-      "airline": "西藏航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "06:40",
-      "arrive_time": "09:20",
-      "dep_airport": "天府T2(CTU)",
-      "arr_airport": "白云T3(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 790.0,
-      "platform": "qunar",
+      "flight_no": "MF4997",
+      "airline": "厦门航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 785.0,
+      "platform": "ctrip",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:54:04",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
-          "platform": "qunar",
-          "price": 790.0
+          "platform": "ctrip",
+          "price": 785.0
         }
       ]
     },
@@ -1271,12 +1922,20 @@
       "price": 790.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
           "price": 790.0
         }
       ]
@@ -1294,12 +1953,51 @@
       "price": 790.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 790.0
+        }
+      ]
+    },
+    {
+      "flight_no": "KY9258",
+      "airline": "昆明航空",
+      "aircraft": "空客321(中)",
+      "depart_time": "11:45",
+      "arrive_time": "13:55",
+      "dep_airport": "双流T2(CTU)",
+      "arr_airport": "白云T3(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 790.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
           "price": 790.0
         }
       ]
@@ -1310,19 +2008,58 @@
       "aircraft": "空客321(中)",
       "depart_time": "11:45",
       "arrive_time": "13:55",
-      "dep_airport": "双流T2(TFU)",
+      "dep_airport": "双流T2(CTU)",
+      "arr_airport": "白云T3(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 790.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 790.0
+        }
+      ]
+    },
+    {
+      "flight_no": "8L7152",
+      "airline": "祥鹏航空",
+      "aircraft": "空客320(中)",
+      "depart_time": "12:00",
+      "arrive_time": "14:40",
+      "dep_airport": "天府T2(TFU)",
       "arr_airport": "白云T3(CAN)",
       "dep_airport_id": "TFU",
       "arr_airport_id": "CAN",
       "price": 790.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
           "price": 790.0
         }
       ]
@@ -1331,28 +2068,36 @@
       "flight_no": "CA3690",
       "airline": "国际航空",
       "aircraft": "波音737(中)",
-      "depart_time": "18:55",
+      "depart_time": "",
       "arrive_time": "21:30",
-      "dep_airport": "天府T2(TFU)",
+      "dep_airport": "(TFU)",
       "arr_airport": "白云T3(CAN)",
       "dep_airport_id": "TFU",
       "arr_airport_id": "CAN",
       "price": 790.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 790.0
         }
       ]
     },
     {
-      "flight_no": "G56110",
-      "airline": "华夏航空",
+      "flight_no": "KY9262",
+      "airline": "昆明航空",
       "aircraft": "波音737(中)",
       "depart_time": "18:55",
       "arrive_time": "21:30",
@@ -1363,12 +2108,20 @@
       "price": 790.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
           "price": 790.0
         }
       ]
@@ -1386,12 +2139,20 @@
       "price": 790.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
           "price": 790.0
         }
       ]
@@ -1409,12 +2170,20 @@
       "price": 790.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
           "price": 790.0
         }
       ]
@@ -1432,20 +2201,28 @@
       "price": 790.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 790.0
         }
       ]
     },
     {
-      "flight_no": "G56108",
-      "airline": "华夏航空",
-      "aircraft": "空客320(中)",
+      "flight_no": "KY9260",
+      "airline": "昆明航空",
+      "aircraft": "空客321(中)",
       "depart_time": "21:45",
       "arrive_time": "00:25",
       "dep_airport": "天府T2(TFU)",
@@ -1455,12 +2232,20 @@
       "price": 790.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
           "price": 790.0
         }
       ]
@@ -1478,12 +2263,82 @@
       "price": 790.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 790.0
+        }
+      ]
+    },
+    {
+      "flight_no": "TV6778",
+      "airline": "西藏航空",
+      "aircraft": "空客321(中)",
+      "depart_time": "06:40",
+      "arrive_time": "09:20",
+      "dep_airport": "天府T2(TFU)",
+      "arr_airport": "白云T3(CAN)",
+      "dep_airport_id": "TFU",
+      "arr_airport_id": "CAN",
+      "price": 790.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 790.0
+        }
+      ]
+    },
+    {
+      "flight_no": "G56110",
+      "airline": "华夏航空",
+      "aircraft": "波音737(中)",
+      "depart_time": "18:55",
+      "arrive_time": "21:30",
+      "dep_airport": "天府T2(TFU)",
+      "arr_airport": "白云T3(CAN)",
+      "dep_airport_id": "TFU",
+      "arr_airport_id": "CAN",
+      "price": 790.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
           "price": 790.0
         }
       ]
@@ -1501,35 +2356,189 @@
       "price": 790.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 790.0
+        },
+        {
+          "platform": "qunar",
+          "price": 790.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 790.0
         }
       ]
     },
     {
-      "flight_no": "8L7152",
-      "airline": "祥鹏航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "18:55",
-      "arrive_time": "14:40",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云T3(CAN)",
-      "dep_airport_id": "TFU",
-      "arr_airport_id": "CAN",
+      "flight_no": "G56108",
+      "airline": "华夏航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
       "price": 790.0,
-      "platform": "qunar",
+      "platform": "ctrip",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:54:04",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
+          "platform": "ctrip",
+          "price": 790.0
+        }
+      ]
+    },
+    {
+      "flight_no": "EU7747",
+      "airline": "成都航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 790.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 790.0
+        },
+        {
           "platform": "qunar",
+          "price": 1680.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1680.0
+        }
+      ]
+    },
+    {
+      "flight_no": "ZH4519",
+      "airline": "深圳航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 790.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 790.0
+        }
+      ]
+    },
+    {
+      "flight_no": "ZH4429",
+      "airline": "深圳航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 790.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 790.0
+        }
+      ]
+    },
+    {
+      "flight_no": "ZH4413",
+      "airline": "深圳航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 790.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 790.0
+        }
+      ]
+    },
+    {
+      "flight_no": "ZH4403",
+      "airline": "深圳航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 790.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 790.0
+        }
+      ]
+    },
+    {
+      "flight_no": "ZH4399",
+      "airline": "深圳航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 790.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
           "price": 790.0
         }
       ]
@@ -1547,13 +2556,21 @@
       "price": 798.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 798.0
+        },
+        {
+          "platform": "qunar",
+          "price": 798.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 840.0
         }
       ]
     },
@@ -1570,13 +2587,21 @@
       "price": 817.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 817.0
+        },
+        {
+          "platform": "qunar",
+          "price": 817.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 860.0
         }
       ]
     },
@@ -1593,12 +2618,20 @@
       "price": 820.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 820.0
+        },
+        {
+          "platform": "qunar",
+          "price": 820.0
+        },
+        {
+          "platform": "ctrip",
           "price": 820.0
         }
       ]
@@ -1606,23 +2639,77 @@
     {
       "flight_no": "EU7231",
       "airline": "成都航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "08:00",
-      "arrive_time": "10:25",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 820.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 820.0
+        }
+      ]
+    },
+    {
+      "flight_no": "EU7435",
+      "airline": "成都航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 820.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 820.0
+        }
+      ]
+    },
+    {
+      "flight_no": "3U6703",
+      "airline": "四川航空",
+      "aircraft": "空客320(中)",
+      "depart_time": "13:30",
+      "arrive_time": "15:50",
       "dep_airport": "天府T2(TFU)",
       "arr_airport": "白云T2(CAN)",
       "dep_airport_id": "TFU",
       "arr_airport_id": "CAN",
-      "price": 820.0,
+      "price": 840.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
-          "price": 820.0
+          "price": 840.0
+        },
+        {
+          "platform": "qunar",
+          "price": 840.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 840.0
         }
       ]
     },
@@ -1639,10 +2726,14 @@
       "price": 840.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
+        {
+          "platform": "qunar",
+          "price": 840.0
+        },
         {
           "platform": "qunar",
           "price": 840.0
@@ -1662,10 +2753,14 @@
       "price": 840.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
+        {
+          "platform": "qunar",
+          "price": 840.0
+        },
         {
           "platform": "qunar",
           "price": 840.0
@@ -1673,9 +2768,40 @@
       ]
     },
     {
+      "flight_no": "3U6709",
+      "airline": "四川航空",
+      "aircraft": "空客320(中)",
+      "depart_time": "19:30",
+      "arrive_time": "21:50",
+      "dep_airport": "天府T2(TFU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "TFU",
+      "arr_airport_id": "CAN",
+      "price": 840.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 840.0
+        },
+        {
+          "platform": "qunar",
+          "price": 840.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 840.0
+        }
+      ]
+    },
+    {
       "flight_no": "CA4309",
       "airline": "国际航空",
-      "aircraft": "",
+      "aircraft": "空客321(中)",
       "depart_time": "18:30",
       "arrive_time": "21:05",
       "dep_airport": "天府T2(TFU)",
@@ -1685,36 +2811,21 @@
       "price": 840.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 840.0
-        }
-      ]
-    },
-    {
-      "flight_no": "EU7435",
-      "airline": "成都航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "10:30",
-      "arrive_time": "13:00",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 860.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
-          "price": 860.0
+          "price": 840.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 840.0
         }
       ]
     },
@@ -1731,35 +2842,20 @@
       "price": 860.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": true,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 860.0
-        }
-      ]
-    },
-    {
-      "flight_no": "3U5373",
-      "airline": "四川航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "16:05",
-      "arrive_time": "18:35",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云T3(CAN)",
-      "dep_airport_id": "TFU",
-      "arr_airport_id": "CAN",
-      "price": 860.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
+          "price": 860.0
+        },
+        {
+          "platform": "ctrip",
           "price": 860.0
         }
       ]
@@ -1777,12 +2873,20 @@
       "price": 860.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 860.0
+        },
+        {
+          "platform": "qunar",
+          "price": 860.0
+        },
+        {
+          "platform": "ctrip",
           "price": 860.0
         }
       ]
@@ -1800,13 +2904,21 @@
       "price": 860.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 860.0
+        },
+        {
+          "platform": "qunar",
+          "price": 860.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 950.0
         }
       ]
     },
@@ -1823,13 +2935,21 @@
       "price": 860.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 860.0
+        },
+        {
+          "platform": "qunar",
+          "price": 860.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 875.0
         }
       ]
     },
@@ -1846,12 +2966,51 @@
       "price": 860.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 860.0
+        },
+        {
+          "platform": "qunar",
+          "price": 860.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 950.0
+        }
+      ]
+    },
+    {
+      "flight_no": "3U5373",
+      "airline": "四川航空",
+      "aircraft": "空客320(中)",
+      "depart_time": "16:05",
+      "arrive_time": "18:35",
+      "dep_airport": "天府T2(TFU)",
+      "arr_airport": "白云T3(CAN)",
+      "dep_airport_id": "TFU",
+      "arr_airport_id": "CAN",
+      "price": 860.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 860.0
+        },
+        {
+          "platform": "qunar",
+          "price": 860.0
+        },
+        {
+          "platform": "ctrip",
           "price": 860.0
         }
       ]
@@ -1869,12 +3028,51 @@
       "price": 870.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 870.0
+        },
+        {
+          "platform": "qunar",
+          "price": 870.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 870.0
+        }
+      ]
+    },
+    {
+      "flight_no": "CA4328",
+      "airline": "国际航空",
+      "aircraft": "空客321(中)",
+      "depart_time": "20:00",
+      "arrive_time": "22:55",
+      "dep_airport": "双流T2(CTU)",
+      "arr_airport": "白云T3(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 870.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 870.0
+        },
+        {
+          "platform": "qunar",
+          "price": 870.0
+        },
+        {
+          "platform": "ctrip",
           "price": 870.0
         }
       ]
@@ -1892,10 +3090,14 @@
       "price": 870.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
+        {
+          "platform": "qunar",
+          "price": 870.0
+        },
         {
           "platform": "qunar",
           "price": 870.0
@@ -1915,59 +3117,75 @@
       "price": 870.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 870.0
-        }
-      ]
-    },
-    {
-      "flight_no": "CA4328",
-      "airline": "国际航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "20:00",
-      "arrive_time": "22:55",
-      "dep_airport": "双流T2(CTU)",
-      "arr_airport": "白云T3(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 870.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
+          "price": 870.0
+        },
+        {
+          "platform": "ctrip",
           "price": 870.0
         }
       ]
     },
     {
-      "flight_no": "KY9258",
-      "airline": "昆明航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "11:45",
-      "arrive_time": "13:55",
-      "dep_airport": "双流T2(CTU)",
-      "arr_airport": "白云T3(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 890.0,
-      "platform": "qunar",
+      "flight_no": "MF1213",
+      "airline": "厦门航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 885.0,
+      "platform": "ctrip",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:54:04",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
+          "platform": "ctrip",
+          "price": 885.0
+        },
+        {
           "platform": "qunar",
-          "price": 890.0
+          "price": 2070.0
+        },
+        {
+          "platform": "qunar",
+          "price": 2070.0
+        }
+      ]
+    },
+    {
+      "flight_no": "MF1207",
+      "airline": "厦门航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 885.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 885.0
         }
       ]
     },
@@ -1984,173 +3202,20 @@
       "price": 890.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 890.0
-        }
-      ]
-    },
-    {
-      "flight_no": "MU3277",
-      "airline": "东方航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "13:30",
-      "arrive_time": "15:50",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "TFU",
-      "arr_airport_id": "CAN",
-      "price": 890.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
           "price": 890.0
-        }
-      ]
-    },
-    {
-      "flight_no": "KY9262",
-      "airline": "昆明航空",
-      "aircraft": "波音737(中)",
-      "depart_time": "18:55",
-      "arrive_time": "21:30",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云T3(CAN)",
-      "dep_airport_id": "TFU",
-      "arr_airport_id": "CAN",
-      "price": 890.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
-          "platform": "qunar",
-          "price": 890.0
-        }
-      ]
-    },
-    {
-      "flight_no": "MU3279",
-      "airline": "东方航空",
-      "aircraft": "",
-      "depart_time": "19:30",
-      "arrive_time": "21:50",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "TFU",
-      "arr_airport_id": "CAN",
-      "price": 890.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
-        {
-          "platform": "qunar",
-          "price": 890.0
-        }
-      ]
-    },
-    {
-      "flight_no": "CZ9089",
-      "airline": "南方航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "20:30",
-      "arrive_time": "22:55",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 890.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
-        {
-          "platform": "qunar",
-          "price": 890.0
-        }
-      ]
-    },
-    {
-      "flight_no": "GJ3437",
-      "airline": "长龙航空",
-      "aircraft": "",
-      "depart_time": "20:30",
-      "arrive_time": "22:55",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 890.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
-        {
-          "platform": "qunar",
-          "price": 890.0
-        }
-      ]
-    },
-    {
-      "flight_no": "MU3473",
-      "airline": "东方航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "20:30",
-      "arrive_time": "22:55",
-      "dep_airport": "双流T1(TFU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "TFU",
-      "arr_airport_id": "CAN",
-      "price": 890.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
-        {
-          "platform": "qunar",
-          "price": 890.0
-        }
-      ]
-    },
-    {
-      "flight_no": "KY9260",
-      "airline": "昆明航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "21:45",
-      "arrive_time": "00:25",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云T3(CAN)",
-      "dep_airport_id": "TFU",
-      "arr_airport_id": "CAN",
-      "price": 890.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
-        {
-          "platform": "qunar",
+          "platform": "ctrip",
           "price": 890.0
         }
       ]
@@ -2168,12 +3233,333 @@
       "price": 890.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 890.0
+        },
+        {
+          "platform": "qunar",
+          "price": 890.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 890.0
+        }
+      ]
+    },
+    {
+      "flight_no": "MU3279",
+      "airline": "东方航空",
+      "aircraft": "空客320(中)",
+      "depart_time": "19:30",
+      "arrive_time": "21:50",
+      "dep_airport": "天府T2(TFU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "TFU",
+      "arr_airport_id": "CAN",
+      "price": 890.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 890.0
+        },
+        {
+          "platform": "qunar",
+          "price": 890.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 890.0
+        }
+      ]
+    },
+    {
+      "flight_no": "CZ9089",
+      "airline": "南方航空",
+      "aircraft": "空客321(中)",
+      "depart_time": "20:30",
+      "arrive_time": "22:55",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 890.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 890.0
+        },
+        {
+          "platform": "qunar",
+          "price": 890.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 890.0
+        }
+      ]
+    },
+    {
+      "flight_no": "MU3473",
+      "airline": "东方航空",
+      "aircraft": "空客321(中)",
+      "depart_time": "20:30",
+      "arrive_time": "22:55",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 890.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 890.0
+        },
+        {
+          "platform": "qunar",
+          "price": 890.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 890.0
+        }
+      ]
+    },
+    {
+      "flight_no": "MU3277",
+      "airline": "东方航空",
+      "aircraft": "空客320(中)",
+      "depart_time": "13:30",
+      "arrive_time": "15:50",
+      "dep_airport": "天府T2(TFU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "TFU",
+      "arr_airport_id": "CAN",
+      "price": 890.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 890.0
+        },
+        {
+          "platform": "qunar",
+          "price": 890.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 890.0
+        }
+      ]
+    },
+    {
+      "flight_no": "G58741",
+      "airline": "华夏航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 890.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 890.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1020.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1020.0
+        }
+      ]
+    },
+    {
+      "flight_no": "G58861",
+      "airline": "华夏航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 890.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 890.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1040.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1040.0
+        }
+      ]
+    },
+    {
+      "flight_no": "G58843",
+      "airline": "华夏航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 890.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 890.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1020.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1020.0
+        }
+      ]
+    },
+    {
+      "flight_no": "GJ3437",
+      "airline": "长龙航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 890.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 890.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1000.0
+        }
+      ]
+    },
+    {
+      "flight_no": "ZH4779",
+      "airline": "深圳航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 890.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 890.0
+        }
+      ]
+    },
+    {
+      "flight_no": "ZH4424",
+      "airline": "深圳航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 890.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 890.0
+        }
+      ]
+    },
+    {
+      "flight_no": "ZH4401",
+      "airline": "深圳航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 890.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
           "price": 890.0
         }
       ]
@@ -2184,43 +3570,28 @@
       "aircraft": "空客320(中)",
       "depart_time": "18:05",
       "arrive_time": "20:30",
-      "dep_airport": "天府T2(CTU)",
+      "dep_airport": "双流T2(TFU)",
       "arr_airport": "白云T3(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 893.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
-        {
-          "platform": "qunar",
-          "price": 893.0
-        }
-      ]
-    },
-    {
-      "flight_no": "MF4709",
-      "airline": "厦门航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "13:30",
-      "arrive_time": "15:50",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云T2(CAN)",
       "dep_airport_id": "TFU",
       "arr_airport_id": "CAN",
       "price": 905.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 905.0
+        },
+        {
+          "platform": "qunar",
+          "price": 905.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 940.0
         }
       ]
     },
@@ -2237,12 +3608,20 @@
       "price": 905.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 905.0
+        },
+        {
+          "platform": "qunar",
+          "price": 905.0
+        },
+        {
+          "platform": "ctrip",
           "price": 905.0
         }
       ]
@@ -2260,12 +3639,51 @@
       "price": 905.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 905.0
+        },
+        {
+          "platform": "qunar",
+          "price": 905.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 905.0
+        }
+      ]
+    },
+    {
+      "flight_no": "MF4709",
+      "airline": "厦门航空",
+      "aircraft": "空客320(中)",
+      "depart_time": "13:30",
+      "arrive_time": "15:50",
+      "dep_airport": "天府T2(TFU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "TFU",
+      "arr_airport_id": "CAN",
+      "price": 905.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 905.0
+        },
+        {
+          "platform": "qunar",
+          "price": 905.0
+        },
+        {
+          "platform": "ctrip",
           "price": 905.0
         }
       ]
@@ -2283,12 +3701,20 @@
       "price": 910.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 910.0
+        },
+        {
+          "platform": "qunar",
+          "price": 910.0
+        },
+        {
+          "platform": "ctrip",
           "price": 910.0
         }
       ]
@@ -2306,12 +3732,20 @@
       "price": 910.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 910.0
+        },
+        {
+          "platform": "qunar",
+          "price": 910.0
+        },
+        {
+          "platform": "ctrip",
           "price": 910.0
         }
       ]
@@ -2319,23 +3753,62 @@
     {
       "flight_no": "GJ3034",
       "airline": "长龙航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "19:30",
-      "arrive_time": "21:50",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云(CAN)",
-      "dep_airport_id": "TFU",
+      "aircraft": "其他机型",
+      "depart_time": "15:00",
+      "arrive_time": "17:30",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
       "arr_airport_id": "CAN",
-      "price": 920.0,
+      "price": 910.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
-          "price": 920.0
+          "price": 910.0
+        },
+        {
+          "platform": "qunar",
+          "price": 910.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 910.0
+        }
+      ]
+    },
+    {
+      "flight_no": "SC6047",
+      "airline": "山东航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 910.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 910.0
+        },
+        {
+          "platform": "qunar",
+          "price": 2270.0
+        },
+        {
+          "platform": "qunar",
+          "price": 2270.0
         }
       ]
     },
@@ -2343,42 +3816,151 @@
       "flight_no": "QW9947",
       "airline": "青岛航空",
       "aircraft": "空客320(中)",
-      "depart_time": "15:00",
+      "depart_time": "19:30",
       "arrive_time": "21:50",
-      "dep_airport": "T2(TFU)",
+      "dep_airport": "天府T2(TFU)",
       "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "TFU",
+      "arr_airport_id": "CAN",
+      "price": 920.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 920.0
+        },
+        {
+          "platform": "qunar",
+          "price": 920.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 920.0
+        }
+      ]
+    },
+    {
+      "flight_no": "MU9893",
+      "airline": "东方航空",
+      "aircraft": "空客320(中)",
+      "depart_time": "15:00",
+      "arrive_time": "17:10",
+      "dep_airport": "天府T2(TFU)",
+      "arr_airport": "白云T3(CAN)",
       "dep_airport_id": "TFU",
       "arr_airport_id": "CAN",
       "price": 922.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 922.0
+        },
+        {
+          "platform": "qunar",
+          "price": 922.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 970.0
+        }
+      ]
+    },
+    {
+      "flight_no": "EU7439",
+      "airline": "成都航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 930.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 930.0
+        },
+        {
+          "platform": "qunar",
+          "price": 940.0
+        },
+        {
+          "platform": "qunar",
+          "price": 940.0
+        }
+      ]
+    },
+    {
+      "flight_no": "EU7235",
+      "airline": "成都航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 930.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 930.0
+        },
+        {
+          "platform": "qunar",
+          "price": 940.0
+        },
+        {
+          "platform": "qunar",
+          "price": 940.0
         }
       ]
     },
     {
       "flight_no": "EU7233",
       "airline": "成都航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "13:30",
-      "arrive_time": "15:50",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "TFU",
-      "arr_airport_id": "CAN",
-      "price": 940.0,
-      "platform": "qunar",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 930.0,
+      "platform": "ctrip",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:54:04",
       "watched": false,
       "price_suspect": false,
       "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 930.0
+        },
+        {
+          "platform": "qunar",
+          "price": 940.0
+        },
         {
           "platform": "qunar",
           "price": 940.0
@@ -2386,25 +3968,25 @@
       ]
     },
     {
-      "flight_no": "3U8735",
-      "airline": "四川航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "16:30",
-      "arrive_time": "19:15",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 940.0,
-      "platform": "qunar",
+      "flight_no": "ZH3257",
+      "airline": "深圳航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 930.0,
+      "platform": "ctrip",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:54:04",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
-          "platform": "qunar",
-          "price": 940.0
+          "platform": "ctrip",
+          "price": 930.0
         }
       ]
     },
@@ -2421,45 +4003,30 @@
       "price": 940.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 940.0
-        }
-      ]
-    },
-    {
-      "flight_no": "EU7235",
-      "airline": "成都航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "19:30",
-      "arrive_time": "21:50",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "TFU",
-      "arr_airport_id": "CAN",
-      "price": 940.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
+          "price": 940.0
+        },
+        {
+          "platform": "ctrip",
           "price": 940.0
         }
       ]
     },
     {
-      "flight_no": "EU7439",
-      "airline": "成都航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "20:30",
-      "arrive_time": "22:55",
+      "flight_no": "3U1192",
+      "airline": "四川航空",
+      "aircraft": "波音737(中)",
+      "depart_time": "17:00",
+      "arrive_time": "19:35",
       "dep_airport": "双流T1(CTU)",
       "arr_airport": "白云T2(CAN)",
       "dep_airport_id": "CTU",
@@ -2467,12 +4034,82 @@
       "price": 940.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 940.0
+        },
+        {
+          "platform": "qunar",
+          "price": 940.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 1180.0
+        }
+      ]
+    },
+    {
+      "flight_no": "MF1237",
+      "airline": "厦门航空",
+      "aircraft": "波音737(中)",
+      "depart_time": "17:00",
+      "arrive_time": "19:35",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 940.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 940.0
+        },
+        {
+          "platform": "qunar",
+          "price": 940.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 995.0
+        }
+      ]
+    },
+    {
+      "flight_no": "3U8735",
+      "airline": "四川航空",
+      "aircraft": "空客320(中)",
+      "depart_time": "16:30",
+      "arrive_time": "19:15",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 940.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 940.0
+        },
+        {
+          "platform": "qunar",
+          "price": 940.0
+        },
+        {
+          "platform": "ctrip",
           "price": 940.0
         }
       ]
@@ -2490,13 +4127,52 @@
       "price": 950.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 950.0
+        },
+        {
+          "platform": "qunar",
+          "price": 950.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 950.0
+        }
+      ]
+    },
+    {
+      "flight_no": "3U1162",
+      "airline": "四川航空",
+      "aircraft": "波音737(中)",
+      "depart_time": "22:00",
+      "arrive_time": "00:40",
+      "dep_airport": "双流T1(CTU)",
+      "arr_airport": "白云T2(CAN)",
+      "dep_airport_id": "CTU",
+      "arr_airport_id": "CAN",
+      "price": 950.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 950.0
+        },
+        {
+          "platform": "qunar",
+          "price": 950.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 1180.0
         }
       ]
     },
@@ -2513,13 +4189,21 @@
       "price": 950.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 950.0
+        },
+        {
+          "platform": "qunar",
+          "price": 950.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 1270.0
         }
       ]
     },
@@ -2536,13 +4220,21 @@
       "price": 950.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 950.0
+        },
+        {
+          "platform": "qunar",
+          "price": 950.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 995.0
         }
       ]
     },
@@ -2559,13 +4251,52 @@
       "price": 970.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 970.0
+        },
+        {
+          "platform": "qunar",
+          "price": 970.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 970.0
+        }
+      ]
+    },
+    {
+      "flight_no": "MF7773",
+      "airline": "厦门航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 985.0,
+      "platform": "ctrip",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:54:04",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 985.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1720.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1720.0
         }
       ]
     },
@@ -2582,12 +4313,20 @@
       "price": 1000.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 1000.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1000.0
+        },
+        {
+          "platform": "ctrip",
           "price": 1000.0
         }
       ]
@@ -2605,12 +4344,20 @@
       "price": 1000.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 1000.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1000.0
+        },
+        {
+          "platform": "ctrip",
           "price": 1000.0
         }
       ]
@@ -2628,12 +4375,20 @@
       "price": 1000.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 1000.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1000.0
+        },
+        {
+          "platform": "ctrip",
           "price": 1000.0
         }
       ]
@@ -2651,12 +4406,20 @@
       "price": 1000.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 1000.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1000.0
+        },
+        {
+          "platform": "ctrip",
           "price": 1000.0
         }
       ]
@@ -2664,92 +4427,62 @@
     {
       "flight_no": "GJ3040",
       "airline": "长龙航空",
-      "aircraft": "波音737(中)",
-      "depart_time": "17:00",
-      "arrive_time": "19:35",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
       "price": 1010.0,
-      "platform": "qunar",
+      "platform": "ctrip",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:54:04",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
-          "platform": "qunar",
+          "platform": "ctrip",
           "price": 1010.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1120.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1120.0
         }
       ]
     },
     {
       "flight_no": "MF5001",
       "airline": "厦门航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "16:30",
+      "aircraft": "",
+      "depart_time": "",
       "arrive_time": "19:15",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
+      "dep_airport": "",
+      "arr_airport": "白云T2",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
       "price": 1015.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 1015.0
-        }
-      ]
-    },
-    {
-      "flight_no": "G58741",
-      "airline": "华夏航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "13:30",
-      "arrive_time": "15:50",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "TFU",
-      "arr_airport_id": "CAN",
-      "price": 1020.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
-          "price": 1020.0
-        }
-      ]
-    },
-    {
-      "flight_no": "G58843",
-      "airline": "华夏航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "19:30",
-      "arrive_time": "21:50",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "TFU",
-      "arr_airport_id": "CAN",
-      "price": 1020.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+          "price": 1015.0
+        },
         {
-          "platform": "qunar",
-          "price": 1020.0
+          "platform": "ctrip",
+          "price": 1015.0
         }
       ]
     },
@@ -2766,59 +4499,21 @@
       "price": 1040.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 1040.0
-        }
-      ]
-    },
-    {
-      "flight_no": "G58861",
-      "airline": "华夏航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "20:30",
-      "arrive_time": "22:55",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 1040.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
           "price": 1040.0
-        }
-      ]
-    },
-    {
-      "flight_no": "GJ3431",
-      "airline": "长龙航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "07:00",
-      "arrive_time": "09:25",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 1080.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
-          "platform": "qunar",
-          "price": 1080.0
+          "platform": "ctrip",
+          "price": 1040.0
         }
       ]
     },
@@ -2835,58 +4530,82 @@
       "price": 1080.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 1080.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1080.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 1080.0
         }
       ]
     },
     {
-      "flight_no": "GJ3433",
-      "airline": "长龙航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "10:30",
-      "arrive_time": "13:00",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 1120.0,
-      "platform": "qunar",
+      "flight_no": "MF1197",
+      "airline": "厦门航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 1095.0,
+      "platform": "ctrip",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:54:04",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
+          "platform": "ctrip",
+          "price": 1095.0
+        },
+        {
           "platform": "qunar",
-          "price": 1120.0
+          "price": 2070.0
+        },
+        {
+          "platform": "qunar",
+          "price": 2070.0
         }
       ]
     },
     {
       "flight_no": "GJ3030",
       "airline": "长龙航空",
-      "aircraft": "波音737(中)",
-      "depart_time": "19:00",
+      "aircraft": "",
+      "depart_time": "",
       "arrive_time": "21:35",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
+      "dep_airport": "",
+      "arr_airport": "白云",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
       "price": 1120.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 1120.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1120.0
+        },
+        {
+          "platform": "ctrip",
           "price": 1120.0
         }
       ]
@@ -2897,29 +4616,37 @@
       "aircraft": "空客321(中)",
       "depart_time": "09:00",
       "arrive_time": "11:40",
-      "dep_airport": "双流T1(CTU)",
+      "dep_airport": "T1(CTU)",
       "arr_airport": "白云T2(CAN)",
       "dep_airport_id": "CTU",
       "arr_airport_id": "CAN",
       "price": 1160.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 1160.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1160.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 1160.0
         }
       ]
     },
     {
-      "flight_no": "HO7420",
+      "flight_no": "HO7410",
       "airline": "吉祥航空",
-      "aircraft": "其他机型",
-      "depart_time": "15:00",
-      "arrive_time": "17:30",
+      "aircraft": "波音737(中)",
+      "depart_time": "12:00",
+      "arrive_time": "14:40",
       "dep_airport": "双流T1(CTU)",
       "arr_airport": "白云T2(CAN)",
       "dep_airport_id": "CTU",
@@ -2927,12 +4654,20 @@
       "price": 1160.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 1160.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1160.0
+        },
+        {
+          "platform": "ctrip",
           "price": 1160.0
         }
       ]
@@ -2940,7 +4675,7 @@
     {
       "flight_no": "HO7418",
       "airline": "吉祥航空",
-      "aircraft": "",
+      "aircraft": "波音737(中)",
       "depart_time": "13:00",
       "arrive_time": "15:35",
       "dep_airport": "双流T1(CTU)",
@@ -2950,33 +4685,49 @@
       "price": 1160.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 1160.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1160.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 1160.0
         }
       ]
     },
     {
-      "flight_no": "3U1192",
-      "airline": "四川航空",
-      "aircraft": "波音737(中)",
-      "depart_time": "17:00",
-      "arrive_time": "19:35",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 1180.0,
-      "platform": "qunar",
+      "flight_no": "HO7420",
+      "airline": "吉祥航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "",
+      "dep_airport": "",
+      "arr_airport": "",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 1160.0,
+      "platform": "ctrip",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:54:04",
       "watched": false,
       "price_suspect": false,
       "platforms": [
+        {
+          "platform": "ctrip",
+          "price": 1160.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1180.0
+        },
         {
           "platform": "qunar",
           "price": 1180.0
@@ -2996,12 +4747,20 @@
       "price": 1180.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
+          "price": 1180.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1180.0
+        },
+        {
+          "platform": "ctrip",
           "price": 1180.0
         }
       ]
@@ -3019,58 +4778,20 @@
       "price": 1270.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 1270.0
-        }
-      ]
-    },
-    {
-      "flight_no": "HO5860",
-      "airline": "吉祥航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "16:30",
-      "arrive_time": "19:15",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 1270.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
           "price": 1270.0
-        }
-      ]
-    },
-    {
-      "flight_no": "HO7422",
-      "airline": "吉祥航空",
-      "aircraft": "波音737(中)",
-      "depart_time": "17:00",
-      "arrive_time": "19:35",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 1270.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
-          "platform": "qunar",
+          "platform": "ctrip",
           "price": 1270.0
         }
       ]
@@ -3088,157 +4809,58 @@
       "price": 1270.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 1270.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1270.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 1270.0
         }
       ]
     },
     {
-      "flight_no": "HO5862",
+      "flight_no": "HO5860",
       "airline": "吉祥航空",
-      "aircraft": "空客321(中)",
-      "depart_time": "20:30",
-      "arrive_time": "22:55",
+      "aircraft": "空客320(中)",
+      "depart_time": "16:30",
+      "arrive_time": "19:15",
       "dep_airport": "双流T1(CTU)",
       "arr_airport": "白云T2(CAN)",
       "dep_airport_id": "CTU",
       "arr_airport_id": "CAN",
-      "price": 1370.0,
+      "price": 1270.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
-          "price": 1370.0
-        }
-      ]
-    },
-    {
-      "flight_no": "EU7747",
-      "airline": "成都航空",
-      "aircraft": "空客330(大)",
-      "depart_time": "07:30",
-      "arrive_time": "10:00",
-      "dep_airport": "双流T2(CTU)",
-      "arr_airport": "白云T3(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 1680.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+          "price": 1270.0
+        },
         {
           "platform": "qunar",
-          "price": 1680.0
-        }
-      ]
-    },
-    {
-      "flight_no": "MF7490",
-      "airline": "厦门航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "16:05",
-      "arrive_time": "18:35",
-      "dep_airport": "天府T2(TFU)",
-      "arr_airport": "白云T3(CAN)",
-      "dep_airport_id": "TFU",
-      "arr_airport_id": "CAN",
-      "price": 1720.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+          "price": 1270.0
+        },
         {
-          "platform": "qunar",
-          "price": 1720.0
+          "platform": "ctrip",
+          "price": 1270.0
         }
       ]
     },
     {
-      "flight_no": "MF7773",
-      "airline": "厦门航空",
-      "aircraft": "空客320(中)",
-      "depart_time": "18:05",
-      "arrive_time": "20:30",
-      "dep_airport": "双流T2(CTU)",
-      "arr_airport": "白云T3(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 1720.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
-        {
-          "platform": "qunar",
-          "price": 1720.0
-        }
-      ]
-    },
-    {
-      "flight_no": "MF1183",
-      "airline": "厦门航空",
-      "aircraft": "波音737(中)",
-      "depart_time": "12:00",
-      "arrive_time": "14:40",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 2070.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
-        {
-          "platform": "qunar",
-          "price": 2070.0
-        }
-      ]
-    },
-    {
-      "flight_no": "MF1213",
-      "airline": "厦门航空",
-      "aircraft": "",
-      "depart_time": "",
-      "arrive_time": "17:30",
-      "dep_airport": "(CTU)",
-      "arr_airport": "(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 2070.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
-        {
-          "platform": "qunar",
-          "price": 2070.0
-        }
-      ]
-    },
-    {
-      "flight_no": "MF1237",
-      "airline": "厦门航空",
+      "flight_no": "HO7422",
+      "airline": "吉祥航空",
       "aircraft": "波音737(中)",
       "depart_time": "17:00",
       "arrive_time": "19:35",
@@ -3246,22 +4868,61 @@
       "arr_airport": "白云T2(CAN)",
       "dep_airport_id": "CTU",
       "arr_airport_id": "CAN",
-      "price": 2070.0,
+      "price": 1270.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
-          "price": 2070.0
+          "price": 1270.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1270.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 1270.0
         }
       ]
     },
     {
-      "flight_no": "MF1197",
-      "airline": "厦门航空",
+      "flight_no": "HO5862",
+      "airline": "吉祥航空",
+      "aircraft": "",
+      "depart_time": "",
+      "arrive_time": "22:55",
+      "dep_airport": "",
+      "arr_airport": "白云",
+      "dep_airport_id": "",
+      "arr_airport_id": "",
+      "price": 1270.0,
+      "platform": "qunar",
+      "route_level": false,
+      "fetched_at": "2026-09-17 21:51:56",
+      "watched": false,
+      "price_suspect": false,
+      "platforms": [
+        {
+          "platform": "qunar",
+          "price": 1270.0
+        },
+        {
+          "platform": "qunar",
+          "price": 1270.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 1270.0
+        }
+      ]
+    },
+    {
+      "flight_no": "HO7414",
+      "airline": "吉祥航空",
       "aircraft": "波音737(中)",
       "depart_time": "19:00",
       "arrive_time": "21:35",
@@ -3269,39 +4930,24 @@
       "arr_airport": "白云T2(CAN)",
       "dep_airport_id": "CTU",
       "arr_airport_id": "CAN",
-      "price": 2070.0,
+      "price": 1370.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
-          "price": 2070.0
-        }
-      ]
-    },
-    {
-      "flight_no": "MF1207",
-      "airline": "厦门航空",
-      "aircraft": "波音737(中)",
-      "depart_time": "13:00",
-      "arrive_time": "15:35",
-      "dep_airport": "双流T1(CTU)",
-      "arr_airport": "白云T2(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 2070.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+          "price": 1370.0
+        },
         {
           "platform": "qunar",
-          "price": 2070.0
+          "price": 1370.0
+        },
+        {
+          "platform": "ctrip",
+          "price": 1370.0
         }
       ]
     },
@@ -3309,7 +4955,7 @@
       "flight_no": "TV6261",
       "airline": "西藏航空",
       "aircraft": "空客321(中)",
-      "depart_time": "",
+      "depart_time": "15:30",
       "arrive_time": "17:50",
       "dep_airport": "双流T2(CTU)",
       "arr_airport": "白云T3(CAN)",
@@ -3318,36 +4964,17 @@
       "price": 2070.0,
       "platform": "qunar",
       "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
+      "fetched_at": "2026-09-17 21:51:56",
       "watched": false,
       "price_suspect": false,
       "platforms": [
         {
           "platform": "qunar",
           "price": 2070.0
-        }
-      ]
-    },
-    {
-      "flight_no": "SC6047",
-      "airline": "山东航空",
-      "aircraft": "空客330(大)",
-      "depart_time": "07:30",
-      "arrive_time": "10:00",
-      "dep_airport": "双流T2(CTU)",
-      "arr_airport": "白云T3(CAN)",
-      "dep_airport_id": "CTU",
-      "arr_airport_id": "CAN",
-      "price": 2270.0,
-      "platform": "qunar",
-      "route_level": false,
-      "fetched_at": "2026-09-17 20:55:09",
-      "watched": false,
-      "price_suspect": false,
-      "platforms": [
+        },
         {
           "platform": "qunar",
-          "price": 2270.0
+          "price": 2070.0
         }
       ]
     }

@@ -251,38 +251,48 @@ powershell -ExecutionPolicy Bypass -File .\install_task.ps1 -IntervalMinutes 90
 
 > 注：`LastTaskResult` 含义 —— `0` 成功，`1` 脚本报错，`267011` 表示尚未运行过。
 
-## 九、携程数据源现状（暂缓，附开启方法）
+## 九、携程数据源现状（间歇可用，附实测与启用方法）
 
-**结论：携程的航班列表接口目前在风控拦截下拿不到数据，页面会如实标注 `ctrip 本轮无数据`。**
+**结论：携程是"间歇可用"——多数轮次被 Whale Guard 拦，但偶尔整批成功。**
+2026-09-17 21:54 那轮实测拿到 **155 架航班**（CTU→CAN 09-27），
+两个目标航班双源价格一致：
 
-实测证据（`debug/ctrip_xhr_*.txt` 只有 186 字节）：
+| 航班 | 去哪儿 | 携程 |
+|---|---|---|
+| CZ3444 | ¥770 | **¥770** |
+| 3U8729 | ¥860 | **¥860** |
+
+> 早期本文档写的是"完全拿不到数据"，那是**统计口径的误导**：52 轮里 ctrip 0 条成功，
+> 但后来发现成功是可能的，只是概率低；而且页面/日志的"被风控拦截"提示有过**假阳性**（见下）。
+
+**被拦时的证据**（`debug/ctrip_xhr_*.txt` 只有 186 字节）：
 
 ```
 https://m.ctrip.com/restapi/soa2/14488/flightListSearchForH5?...
 whaleguard block
 ```
 
-页面快照里是拼图验证墙（"请完成以下验证：依次点击图标验证 / 滑动将展现拼图"）。
-这类验证靠改指纹过不去，必须真人过一次。
+**修掉的一个假阳性**：早期用"页面 HTML 里出现 `captcha`"来判定被拦，但携程页面**本身就引用**
+`captcha.min.js` / `jigsawCaptcha` 等脚本（正常页面也有）。实测出现过"打了被拦日志、
+同一轮却解析到 155 架航班"的矛盾输出。现在只认**接口返回内容**（`whaleguard` 或长度异常的 block）。
 
-已经做过的尝试（**均未通过**，留着以后继续）：
+已做过的改造（保留）：
 
 * 指纹伪装提到基类：清掉 iPhone UA 下不该存在的 `navigator.userAgentData` /
   `connection` / `deviceMemory`，WebGL 伪装成 Apple GPU，plugins/mimeTypes 置空
 * 列表页之前先访问机票首页"预热"，建立访客 cookie
-* 有头 / 无头两种模式都试过；等待窗放宽到 12 秒 + 6 次滚动
-* 风控识别：命中时明确打出 `被风控拦截：接口返回风控: whaleguard block`
+* 风控识别只依据接口返回内容（见上）
+* 同一轮内两次请求间隔 360 秒（`schedule.route_delay_seconds`）
 
 顺带一个交叉印证：携程**跨日期低价日历没有被拦**，它显示广州→成都 09-22 最低 ¥360，
-与去哪儿抓到的航线最低价一致 —— 说明去哪儿的数据可信。
+与去哪儿抓到的航线最低价一致。
 
-**以后要启用携程**（两条路，任选其一）：
+**想提高携程的成功率**（两条路，任选其一）：
 
 ```powershell
 # 路线 A：过一次拼图（不需要携程账号）
 .\.venv\Scripts\python.exe solve_ctrip.py --from CTU --to CAN --date 2026-09-27 --wait 300
 #   弹出可见浏览器 -> 手动滑动拼图 -> 脚本每 5 秒检测，拿到数据即保存会话到 user_data/ctrip
-#   之后 python probe_ctrip.py --from CTU --to CAN --date 2026-09-27 可验证无头模式能否复用
 
 # 路线 B：用携程账号登录（登录态通常能绕过拼图）
 .\.venv\Scripts\python.exe main.py --login ctrip
