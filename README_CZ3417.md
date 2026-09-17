@@ -306,13 +306,14 @@ whaleguard block
 ### 公开地址（均已验证可用）
 
 > **当前只监控一个页面**：成都→广州 09-27（CZ3444 / 3U8729，携程 + 去哪儿）。
-> CZ3417 与晚间 5 班的页面已停止更新（配置与代码保留，随时可恢复）。
+> CZ3417 与晚间 5 班的页面**已删除**（Cloudflare 项目已删，链接下线）；
+> 它们的配置与数据仍在本地，需要时可随时重建。
 
 | 页面 | 状态 | Cloudflare Pages | GitHub Pages |
 |---|---|---|---|
 | **成都→广州 09-27** | ✅ **监控中** | **https://ctu-can-monitor.pages.dev/** | https://leoli797979-sys.github.io/cz3417-flight-monitor/ （根路径）<br>…/cz3417-flight-monitor/ctucan/ （旧链接仍可访问） |
-| CZ3417 | ⏸ 已停止更新 | cz3417-monitor.pages.dev（冻结在上次快照） | 根路径已被上方页面取代 |
-| 晚间 5 班 | ⏸ 已停止更新 | can-ctu-evening.pages.dev（冻结） | …/w5/（新的 Pages 部署不再包含） |
+| CZ3417 | ❌ 已删除 | ~~cz3417-monitor.pages.dev~~（DNS 已移除） | 根路径已被上方页面取代 |
+| 晚间 5 班 | ❌ 已删除 | ~~can-ctu-evening.pages.dev~~（返回 530） | …/w5/ 已随新部署下线（404） |
 
 每个页面都提供同路径的机器可读接口：
 
