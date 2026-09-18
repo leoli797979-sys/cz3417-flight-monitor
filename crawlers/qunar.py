@@ -208,8 +208,13 @@ class QunarCrawler(BaseCrawler):
         return self._fetch_via_browser(from_city, to_city, date)
 
     # ==================== httpx 续航 ====================
-    def _fetch_via_httpx(self, from_city: str, to_city: str, date: str) -> Optional[str]:
-        """用缓存 token 直接 httpx POST，返回原始响应文本或 None。"""
+    def _fetch_via_httpx(self, from_city: str, to_city: str, date: str,
+                         ignore_age: bool = False) -> Optional[str]:
+        """用缓存 token 直接 httpx POST，返回原始响应文本或 None。
+
+        ``ignore_age=True`` 时绕过"令牌太旧就别用"的规则 —— 只给登录墙兜底用：
+        浏览器握手被墙挡住时，拿陈旧令牌打接口仍有约 20% 成功率，比什么都不做强。
+        """
         token = self._load_token()
         if not token:
             return None
@@ -219,7 +224,7 @@ class QunarCrawler(BaseCrawler):
         # 所以宁可提前用浏览器握手换一个新令牌，也不要拿快过期的令牌去撞 1999
         # （撞了之后同轮的兜底还只有 22% 能救回来）。
         max_age_min = int(self.config.get("token_max_age_minutes", 60) or 0)
-        if max_age_min > 0:
+        if max_age_min > 0 and not ignore_age:
             age_s = time.time() - float(token.get("updated_at", 0) or 0)
             if age_s > max_age_min * 60:
                 self.logger.info(
@@ -400,6 +405,12 @@ class QunarCrawler(BaseCrawler):
                 "[qunar] 被跳到登录页，本次不写入 token（避免毒化缓存），"
                 "并进入 %d 分钟冷却；若长时间不恢复需要人工登录一次：python main.py --login qunar",
                 int(self.config.get("wall_cooldown_minutes", 0) or self.WALL_COOLDOWN_MIN))
+            # 兜底：登录墙挡的是页面导航，拿着缓存里的陈旧令牌直接打接口有时还能拿到数据
+            # （实测令牌 >1.5 小时成功率约 20%）。有总比空手强。
+            stale = self._fetch_via_httpx(from_city, to_city, date, ignore_age=True)
+            if stale:
+                self.logger.info("[qunar] 登录墙兜底成功：用陈旧令牌直接拿到响应")
+                return stale
         else:
             self.logger.warning("[qunar] 未拿到列表响应，本次不写入 token")
 
@@ -469,6 +480,9 @@ class QunarCrawler(BaseCrawler):
     _RE_DEPTERM = re.compile(r'"depTerminal"\s*:\s*"([^"]{1,10})"')
     _RE_ARRTERM = re.compile(r'"arrTerminal"\s*:\s*"([^"]{1,10})"')
     _RE_NAME = re.compile(r'"name"\s*:\s*\[\s*"([^"]{1,40})"(?:\s*,\s*"([^"]{1,40})")?')
+    # 代码共享标记：codeShare=1 表示这一行的航班号只是"挂名"，实际承运看 mainCarrier
+    _RE_CODESHARE = re.compile(r'"codeShare"\s*:\s*"?(\d)"?')
+    _RE_MAINCARRIER = re.compile(r'"mainCarrier"\s*:\s*"([A-Z0-9]{2}\d{3,4})"')
 
     @classmethod
     def _parse_flight_objects(cls, text: str) -> list:
@@ -571,13 +585,26 @@ class QunarCrawler(BaseCrawler):
                 "dep_terminal": first(cls._RE_DEPTERM),
                 "arr_terminal": first(cls._RE_ARRTERM),
             }
+            cs_hit = cls._RE_CODESHARE.search(block)
+            mc_hit = cls._RE_MAINCARRIER.search(block)
+            base["code_share"] = bool(cs_hit and cs_hit.group(1) == "1")
+            base["main_carrier"] = (flights_mod.norm_flight_no(mc_hit.group(1)) if mc_hit else "")
             for fno in fno_list:
                 rec = dict(base, flight_no=fno)
                 # 航司名以航班号前缀为准（响应里的 name 字段可能被邻行串到）
                 rec["airline"] = flights_mod.carrier_name(fno) or base["airline"]
                 collected.append(rec)
 
-        return cls._pick_best_per_flight(collected)
+        # 丢弃"代码共享"行 —— 它们不是独立航班。
+        # 实测 2026-09-18：整份报文 304 行里 224 行是共享号（例如 3U1172 只是 CZ3444
+        # 挂川航号卖的别名），页面上按行展示就会出现"用户在去哪儿 app 里搜不到"的假航班，
+        # 而且会让"航班 N 架"这种计数虚高一倍多。只有当实际承运航班本身也在报文里时
+        # 才丢，避免万一共享号是唯一来源时把数据弄丢。
+        operating = {r["flight_no"] for r in collected if not r.get("code_share")}
+        kept = [r for r in collected
+                if not r.get("code_share") or not r.get("main_carrier")
+                or r["main_carrier"] not in operating]
+        return cls._pick_best_per_flight(kept)
 
     @staticmethod
     def _clean_label(value: str) -> str:

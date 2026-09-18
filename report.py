@@ -903,6 +903,7 @@ def build_html(cfg: dict, conn, out_path: str) -> str:
 
   <footer>
     数据来自公开页面抓取，仅供个人出行参考，不含会员价 / 券后价，实际下单以航司页面为准。<br>
+    表格只列<b>实际承运航班</b>，已剔除代码共享号（同一趟飞机挂多家航司号出售的别名，在购票 App 里搜不到）。<br>
     项目基于 <a href="https://github.com/yangka1212/JiPiao">yangka1212/JiPiao</a>（MIT）改造：增加按航班号解析与告警。
   </footer>
 </div>

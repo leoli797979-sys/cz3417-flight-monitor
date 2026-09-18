@@ -60,8 +60,10 @@ crawler:
   # 提到 90（原 60）是为了配合 10 分钟一轮：把浏览器握手从 144 次/天降到约 16 次/天。
   token_max_age_minutes: 90
   # 偶发登录墙（页面被跳到 user.qunar.com/mobile/login.jsp）后的冷却时间。
-  # 撞墙期间不再跑浏览器握手，避免高频撞墙把风控喂得更狠；httpx 仍照常尝试。
-  wall_cooldown_minutes: 30
+  # 撞墙期间不再跑浏览器握手，避免高频撞墙把风控喂得更狠；httpx 仍照常尝试
+  # （含"用陈旧令牌硬试一次"的兜底）。实测登录墙恢复很快（有一次 3 分钟内就好了），
+  # 所以冷却不宜太长，15 分钟即最多漏掉一轮多一点。
+  wall_cooldown_minutes: 15
   user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
   mobile_user_agent: ""
   debug: true

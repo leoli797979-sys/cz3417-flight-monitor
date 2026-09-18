@@ -130,9 +130,20 @@ if ($RoundTimeoutMinutes -gt 0) {
     $argLine += " -RoundTimeoutMinutes $RoundTimeoutMinutes"
 }
 
+# Launch through `conhost.exe --headless` instead of powershell.exe directly.
+# Why: a scheduled task that starts a console program creates a NEW console for it
+# (Windows 11 gives it a pseudo-console, class "PseudoConsoleWindow"), so a console
+# window pops up on screen for the whole round - every 10 minutes. Measured on this
+# machine 2026-09-18:
+#   powershell.exe .................. PseudoConsoleWindow visible=True   <- pops up
+#   powershell.exe -WindowStyle Hidden  PseudoConsoleWindow visible=True  <- still pops up
+#   conhost.exe --headless powershell  PseudoConsoleWindow visible=False  <- stays invisible
+# -WindowStyle Hidden alone is NOT enough; the pseudo-console is created regardless.
+$conhost = Join-Path $env:SystemRoot "System32\conhost.exe"
+
 $action = New-ScheduledTaskAction `
-    -Execute $psExe `
-    -Argument $argLine `
+    -Execute $conhost `
+    -Argument ("--headless `"$psExe`" " + $argLine) `
     -WorkingDirectory $root
 
 # First run 2 minutes from now, then repeat every $IntervalMinutes.
@@ -177,7 +188,7 @@ Register-ScheduledTask `
 
 Write-Host "Registered scheduled task: $TaskName" -ForegroundColor Green
 Write-Host ("  interval : every {0} minutes, first run at {1}" -f $IntervalMinutes, (Get-Date).AddMinutes(2).ToString("HH:mm:ss"))
-Write-Host ("  command  : `"$psExe`" -File `"$script`"")
+Write-Host ("  command  : conhost.exe --headless `"$psExe`" -File `"$script`"")
 Write-Host ("  log      : " + (Join-Path $root "logs\task.log"))
 Write-Host ("  report   : " + (Join-Path $root "report.html"))
 if (-not $NoWake) { Enable-WakeTimers }
