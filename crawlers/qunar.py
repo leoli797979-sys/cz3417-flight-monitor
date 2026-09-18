@@ -587,24 +587,28 @@ class QunarCrawler(BaseCrawler):
             }
             cs_hit = cls._RE_CODESHARE.search(block)
             mc_hit = cls._RE_MAINCARRIER.search(block)
-            base["code_share"] = bool(cs_hit and cs_hit.group(1) == "1")
-            base["main_carrier"] = (flights_mod.norm_flight_no(mc_hit.group(1)) if mc_hit else "")
+            code_share = bool(cs_hit and cs_hit.group(1) == "1")
+            main_carrier = (flights_mod.norm_flight_no(mc_hit.group(1)) if mc_hit else "")
+
+            # 代码共享行一律按"实际承运航班号"记账。
+            #
+            # 实测 2026-09-18：整份报文 304 行里 224 行是共享号（同一架飞机挂多家航司号
+            # 各列一行，例如 3U1172 / MF4997 都是 CZ3444），若照原号入库，页面上就会出现
+            # 用户"在去哪儿 App 里搜不到"的假航班，还会让"航班 N 架"虚高一倍多。
+            #
+            # 为什么不是直接丢弃：报文掺假程度每轮都不同，有时"实际承运行"那一行根本
+            # 解析不出来（实测 12:51 那批 61 行里 CZ3444 缺失、只剩它的别名 3U1172）。
+            # 改记实际承运号后，既没有假航班，也不会让监控班次整批消失 —— 别名行里
+            # 的时刻与价格本就属于这架飞机。
+            if code_share and main_carrier:
+                fno_list = [main_carrier]
             for fno in fno_list:
                 rec = dict(base, flight_no=fno)
                 # 航司名以航班号前缀为准（响应里的 name 字段可能被邻行串到）
                 rec["airline"] = flights_mod.carrier_name(fno) or base["airline"]
                 collected.append(rec)
 
-        # 丢弃"代码共享"行 —— 它们不是独立航班。
-        # 实测 2026-09-18：整份报文 304 行里 224 行是共享号（例如 3U1172 只是 CZ3444
-        # 挂川航号卖的别名），页面上按行展示就会出现"用户在去哪儿 app 里搜不到"的假航班，
-        # 而且会让"航班 N 架"这种计数虚高一倍多。只有当实际承运航班本身也在报文里时
-        # 才丢，避免万一共享号是唯一来源时把数据弄丢。
-        operating = {r["flight_no"] for r in collected if not r.get("code_share")}
-        kept = [r for r in collected
-                if not r.get("code_share") or not r.get("main_carrier")
-                or r["main_carrier"] not in operating]
-        return cls._pick_best_per_flight(kept)
+        return cls._pick_best_per_flight(collected)
 
     @staticmethod
     def _clean_label(value: str) -> str:

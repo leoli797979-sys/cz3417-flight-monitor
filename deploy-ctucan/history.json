@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-09-18 12:50:01",
+  "generated_at": "2026-09-18 12:55:58",
   "date": "2026-09-27",
   "watch_flights": [
     "CZ3444",
     "3U8729"
   ],
-  "sample_count": 75,
+  "sample_count": 76,
   "series": {
     "CZ3444": [
       {
@@ -592,6 +592,10 @@
       },
       {
         "fetched_at": "2026-09-18 12:41:23",
+        "price": 860.0
+      },
+      {
+        "fetched_at": "2026-09-18 12:51:23",
         "price": 860.0
       }
     ]

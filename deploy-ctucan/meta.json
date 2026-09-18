@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-09-18 12:50:01",
-  "last_fetch": "2026-09-18 12:41:23",
+  "updated_at": "2026-09-18 12:55:58",
+  "last_fetch": "2026-09-18 12:51:23",
   "date": "2026-09-27",
   "route": {
     "from": "CTU",
@@ -18,7 +18,7 @@
   "min_price": 770.0,
   "max_price": 770.0,
   "avg_price": 770.0,
-  "sample_count": 75,
+  "sample_count": 76,
   "flights": [
     {
       "flight_no": "CZ3444",
@@ -40,7 +40,7 @@
     {
       "flight_no": "3U8729",
       "airline": "四川航空",
-      "aircraft": "",
+      "aircraft": "空客320(中)",
       "depart_time": "15:05",
       "arrive_time": "17:30",
       "dep_airport": "",
@@ -50,7 +50,7 @@
       "min_price": 860.0,
       "max_price": 860.0,
       "avg_price": 860.0,
-      "sample_count": 75,
+      "sample_count": 76,
       "below_threshold": false,
       "cheapest_among_watched": false
     }
@@ -58,13 +58,13 @@
   "cheapest_flight": "CZ3444",
   "cheapest_price": 770.0,
   "missing_flights": [],
-  "flight_count": 152,
+  "flight_count": 62,
   "source": [
     "qunar",
     "ctrip"
   ],
   "platform_status": {
-    "qunar": 152,
+    "qunar": 61,
     "ctrip": 2
   }
 }
