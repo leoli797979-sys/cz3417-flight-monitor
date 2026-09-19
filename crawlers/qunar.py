@@ -539,9 +539,11 @@ class QunarCrawler(BaseCrawler):
 
             # ---- 价格：优先本行自己的 code 之后的 minPrice ----
             price = None
+            code_own = False
             for fno in fno_list:
                 m_own = re.search(r'"code"\s*:\s*"%s"' % re.escape(fno), block)
                 if m_own:
+                    code_own = True
                     tail = block[m_own.end():]
                     nxt = cls._RE_ANY_CODE.search(tail)
                     if nxt:
@@ -606,6 +608,8 @@ class QunarCrawler(BaseCrawler):
                 rec = dict(base, flight_no=fno)
                 # 航司名以航班号前缀为准（响应里的 name 字段可能被邻行串到）
                 rec["airline"] = flights_mod.carrier_name(fno) or base["airline"]
+                # 本行的 code 指向自己 -> 说明这一块没被拼接串行，选优时优先（不进库）
+                rec["_code_own"] = code_own
                 collected.append(rec)
 
         return cls._pick_best_per_flight(collected)
@@ -629,13 +633,24 @@ class QunarCrawler(BaseCrawler):
 
     @staticmethod
     def _pick_best_per_flight(rows: list) -> list:
-        """同一航班号可能有多行（含残缺行）：取字段最全的一行，同分取低价。"""
+        """同一航班号可能有多行（含残缺行）：取最可信的一行。
+
+        打分顺序：字段填充数 -> 本行 ``code`` 是否指向自己 -> 低价。
+
+        为什么要比"机场名"：实测 2026-09-19 出现过 3U8729 两行候选 —— 一行是
+        ``15:05→17:30 双流(CTU)``（真实），另一行是拼接碎片 ``16:05→17:30``、
+        机场只有 id ``TFU`` 而机场名是空。两行其它字段一样、价格也一样，
+        旧逻辑只看 id 类字段，于是先出现的碎片行赢了，页面就把 16:05/天府 当成了 3U8729。
+        把机场名计入后，完整那行自然胜出。
+        """
         fields = ("depart_time", "arrive_time", "dep_airport_id",
-                  "arr_airport_id", "airline", "aircraft")
+                  "arr_airport_id", "dep_airport", "arr_airport",
+                  "airline", "aircraft")
 
         def score(r):
             filled = sum(1 for f in fields if r.get(f))
-            return (filled, -r["price"])
+            own = 1 if r.get("_code_own") else 0
+            return (filled, own, -r["price"])
 
         best: dict = {}
         for r in rows:
