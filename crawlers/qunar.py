@@ -50,6 +50,14 @@ class QunarCrawler(BaseCrawler):
         "DIG": "香格里拉", "TCZ": "腾冲",
     }
 
+    # ---- 共享号（别名）学习缓存 ----
+    # 为什么需要：报文每轮掺假程度不同，有些轮次里共享行的 codeShare / mainCarrier
+    # 字段直接被抹掉了，光看报文认不出"3U1168 其实就是 CZ3438"，于是页面上又会冒出
+    # 购票 App 里搜不到的假航班（2026-09-19 10:21 那轮就残留了 3 个）。
+    # 因此把"带标记轮次里学到的 共享号 -> 实际承运号"存下来，供没带标记的轮次使用。
+    _ALIAS_FILE = os.path.join("user_data", "qunar", "aliases.json")
+    _alias_cache: Optional[dict] = None
+
     # 反自动化指纹脚本：让设备指纹与 iPhone UA 自洽，骗过 chloroFp 服务端校验
     # 关键：Ctrip 风控发现「iPhone UA + Win32/NVIDIA WebGL」矛盾会拒发指纹 token
     _STEALTH_JS = r"""
@@ -592,27 +600,72 @@ class QunarCrawler(BaseCrawler):
             code_share = bool(cs_hit and cs_hit.group(1) == "1")
             main_carrier = (flights_mod.norm_flight_no(mc_hit.group(1)) if mc_hit else "")
 
-            # 代码共享行一律按"实际承运航班号"记账。
-            #
-            # 实测 2026-09-18：整份报文 304 行里 224 行是共享号（同一架飞机挂多家航司号
-            # 各列一行，例如 3U1172 / MF4997 都是 CZ3444），若照原号入库，页面上就会出现
-            # 用户"在去哪儿 App 里搜不到"的假航班，还会让"航班 N 架"虚高一倍多。
-            #
-            # 为什么不是直接丢弃：报文掺假程度每轮都不同，有时"实际承运行"那一行根本
-            # 解析不出来（实测 12:51 那批 61 行里 CZ3444 缺失、只剩它的别名 3U1172）。
-            # 改记实际承运号后，既没有假航班，也不会让监控班次整批消失 —— 别名行里
-            # 的时刻与价格本就属于这架飞机。
-            if code_share and main_carrier:
-                fno_list = [main_carrier]
             for fno in fno_list:
                 rec = dict(base, flight_no=fno)
                 # 航司名以航班号前缀为准（响应里的 name 字段可能被邻行串到）
                 rec["airline"] = flights_mod.carrier_name(fno) or base["airline"]
                 # 本行的 code 指向自己 -> 说明这一块没被拼接串行，选优时优先（不进库）
                 rec["_code_own"] = code_own
+                # 共享信息留到循环后统一处理（见下面"共享号归一"）
+                rec["_alias"] = (code_share, main_carrier)
                 collected.append(rec)
 
+        # ---- 共享号归一：把共享行的航班号改成"实际承运航班号" ----
+        #
+        # 实测 2026-09-18/19：整份报文里同一架飞机会挂多家航司号各列一行（某份 304 行里
+        # 224 行是共享号，例如 3U1172 只是 CZ3444 挂川航号卖的别名）。照原号入库，页面就会
+        # 出现用户"在购票 App 里搜不到"的假航班，还会让"航班 N 架"虚高一倍多。
+        #
+        # 为什么不是直接丢弃：报文掺假程度每轮不同，有时"实际承运行"那一行解析不出来、
+        # 只剩别名（实测 12:51 那批 CZ3444 缺失），丢弃会让监控班次整批消失。
+        # 改成归一后，别名行里的时刻与价格会记到正确航班号下，两个问题一起解决。
+        #
+        # 报文没带 codeShare/mainCarrier（掺假把它们抹掉了）的行，查学习缓存兜底。
+        known = cls._alias_map()
+        learned: dict = {}
+        for r in collected:
+            cs, mc = r.pop("_alias", (False, ""))
+            if cs and mc and mc != r["flight_no"]:
+                learned[r["flight_no"]] = mc
+            elif not cs and r["flight_no"] in known:
+                learned[r["flight_no"]] = known[r["flight_no"]]
+        for r in collected:
+            tgt = learned.get(r["flight_no"])
+            if tgt:
+                r["flight_no"] = tgt
+                r["airline"] = flights_mod.carrier_name(tgt) or r.get("airline", "")
+        cls._learn_aliases(learned)
+
         return cls._pick_best_per_flight(collected)
+
+    @staticmethod
+    def _alias_map() -> dict:
+        """读"共享号 -> 实际承运号"学习缓存（进程内只读一次）。"""
+        if QunarCrawler._alias_cache is None:
+            try:
+                with open(QunarCrawler._ALIAS_FILE, "r", encoding="utf-8") as f:
+                    QunarCrawler._alias_cache = json.load(f) or {}
+            except Exception:
+                QunarCrawler._alias_cache = {}
+        return QunarCrawler._alias_cache
+
+    @staticmethod
+    def _learn_aliases(extra: dict) -> None:
+        """把新学到的映射写入缓存。已存在且指向别的航班时不覆盖（防脏数据改写）。"""
+        if not extra:
+            return
+        m = QunarCrawler._alias_map()
+        merged = {k: v for k, v in extra.items()
+                  if k and v and k != v and m.get(k, v) == v}
+        if not merged:
+            return
+        m.update(merged)
+        try:
+            os.makedirs(os.path.dirname(QunarCrawler._ALIAS_FILE), exist_ok=True)
+            with open(QunarCrawler._ALIAS_FILE, "w", encoding="utf-8") as f:
+                json.dump(m, f, ensure_ascii=False, indent=1, sort_keys=True)
+        except Exception:
+            pass
 
     @staticmethod
     def _clean_label(value: str) -> str:

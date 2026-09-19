@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-09-19 10:11:42",
-  "last_fetch": "2026-09-19 10:11:26",
+  "updated_at": "2026-09-19 10:22:07",
+  "last_fetch": "2026-09-19 10:21:23",
   "date": "2026-09-27",
   "route": {
     "from": "CTU",
@@ -17,13 +17,13 @@
   "current_price": 770.0,
   "min_price": 770.0,
   "max_price": 1160.0,
-  "avg_price": 775.7,
-  "sample_count": 133,
+  "avg_price": 775.8,
+  "sample_count": 134,
   "flights": [
     {
       "flight_no": "CZ3444",
       "airline": "南方航空",
-      "aircraft": "",
+      "aircraft": "其他机型",
       "depart_time": "15:00",
       "arrive_time": "17:30",
       "dep_airport": "",
@@ -32,25 +32,25 @@
       "platform": "ctrip",
       "min_price": 770.0,
       "max_price": 1160.0,
-      "avg_price": 775.7,
-      "sample_count": 131,
+      "avg_price": 775.8,
+      "sample_count": 132,
       "below_threshold": false,
       "cheapest_among_watched": true
     },
     {
       "flight_no": "3U8729",
       "airline": "四川航空",
-      "aircraft": "",
-      "depart_time": "16:05",
+      "aircraft": "空客320(中)",
+      "depart_time": "15:05",
       "arrive_time": "17:30",
-      "dep_airport": "",
-      "arr_airport": "",
+      "dep_airport": "双流(CTU)",
+      "arr_airport": "(CAN)",
       "price": 860.0,
       "platform": "qunar",
       "min_price": 860.0,
       "max_price": 940.0,
-      "avg_price": 872.0,
-      "sample_count": 133,
+      "avg_price": 871.9,
+      "sample_count": 134,
       "below_threshold": false,
       "cheapest_among_watched": false
     }
@@ -58,13 +58,13 @@
   "cheapest_flight": "CZ3444",
   "cheapest_price": 770.0,
   "missing_flights": [],
-  "flight_count": 147,
+  "flight_count": 97,
   "source": [
     "qunar",
     "ctrip"
   ],
   "platform_status": {
-    "qunar": 147,
+    "qunar": 97,
     "ctrip": 2
   }
 }

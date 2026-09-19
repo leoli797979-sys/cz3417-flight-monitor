@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import sys
+import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -13,6 +14,11 @@ from core import flights as F                      # noqa: E402
 from core.alerter import Alerter                   # noqa: E402
 from core.models import FlightPrice, Route         # noqa: E402
 from crawlers.qunar import QunarCrawler            # noqa: E402
+
+# 解析器会读本地"共享号 -> 实际承运号"学习缓存（user_data/qunar/aliases.json）。
+# 单测必须与本地状态无关，所以指向临时文件并把进程内缓存置空。
+QunarCrawler._ALIAS_FILE = os.path.join(tempfile.gettempdir(), "cz3417_test_aliases.json")
+QunarCrawler._alias_cache = {}
 
 PASS, FAIL = [], []
 
