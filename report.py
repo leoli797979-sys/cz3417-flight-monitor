@@ -185,8 +185,12 @@ def backfill_times(conn, rows: list) -> None:
     切行的解析偶尔拿不到 ``depTime``/``arrTime`` —— 实测 2026-09-17 23:20 那一轮
     116 行里有 27 行缺时刻，恰好包含用户盯的 CZ3444/3U8729。价格不受影响，但页面展示
     时刻时取的是"本轮最便宜那一行"，缺了就渲染成 ``--:--``，看起来像是航班信息丢了。
-    班次的起降时刻是静态属性，用该班次最近一次解析成功的值补上即可；一旦新数据里带了
-    时刻，补的值会被自然覆盖，不会掩盖真正的航班时刻变动。
+    班次的起降时刻是静态属性，用该班次历史上**出现次数最多**的时刻补上即可；一旦新数据里
+    带了时刻，补的值会被自然覆盖，不会掩盖真正的时刻变动。
+
+    为什么取众数而不是"最近一次非空值"：报文偶发掺假会解析出错误时刻（实测 3U8729 出现过
+    一次 16:05/天府，而正解 15:05/双流有上百次样本）。取最近值会把那一次错误一直传下去，
+    取众数则自然被多数正确样本覆盖。
     """
     if not rows:
         return
@@ -205,10 +209,12 @@ def backfill_times(conn, rows: list) -> None:
                 "SELECT "
                 " (SELECT depart_time FROM flight_prices "
                 "   WHERE UPPER(REPLACE(flight_no,' ',''))=? AND depart_date=? "
-                "     AND depart_time<>'' ORDER BY fetched_at DESC LIMIT 1) AS d, "
+                "     AND depart_time<>'' GROUP BY depart_time "
+                "   ORDER BY COUNT(*) DESC LIMIT 1) AS d, "
                 " (SELECT arrive_time FROM flight_prices "
                 "   WHERE UPPER(REPLACE(flight_no,' ',''))=? AND depart_date=? "
-                "     AND arrive_time<>'' ORDER BY fetched_at DESC LIMIT 1) AS a",
+                "     AND arrive_time<>'' GROUP BY arrive_time "
+                "   ORDER BY COUNT(*) DESC LIMIT 1) AS a",
                 (fno, key[1], fno, key[1])).fetchone()
             cache[key] = dict(hit) if hit else {}
         known = cache[key]

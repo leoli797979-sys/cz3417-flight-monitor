@@ -661,14 +661,22 @@ class QunarCrawler(BaseCrawler):
 
     @staticmethod
     def _extract_qunar_flights(text: str) -> list:
-        """抽取逐航班记录：先按标准 JSON 试，失败再按去哪儿片段切分。
+        """抽取逐航班记录。
 
-        返回每项含 flight_no / depart_time / arrive_time / price / airline /
-        dep_airport / arr_airport 等。
+        **优先走 binfo 专用解析器**：它按 ``binfo`` 切行，能拿到起降时刻、机场以及
+        ``codeShare`` / ``mainCarrier``，所以代码共享号会被归一到实际承运航班。
+        只有它一条都解析不出来时，才退回通用解析（那种响应通常只剩航班号 + 价格）。
+
+        踩过的坑（2026-09-19）：原来先试"``data`` 能当 JSON 解析就走通用解析"，
+        而响应内容每次都不一样 —— 命中 clean JSON 变体的那一轮会解析出 **147 条没有时刻、
+        且把共享号当独立航班的记录**（页面航班数从 40 跳到 147，3U8729 变成 16:05/天府）。
+        同一份报文换成专用解析器就是 40 条、时刻齐全、无共享号。
         """
         if not text:
             return []
-        # 路线一：如果哪次响应是干净 JSON（字段改名/换接口），走通用解析
+        recs = QunarCrawler._parse_flight_objects(text)
+        if recs:
+            return recs
         obj = flights_mod._loads_deep(text)
         if isinstance(obj, dict):
             data = obj.get("data")
@@ -681,8 +689,7 @@ class QunarCrawler(BaseCrawler):
             recs = flights_mod.extract_records(scope)
             if recs:
                 return recs
-        # 路线二：去哪儿实际的"截断片段"形态
-        return QunarCrawler._parse_flight_objects(text)
+        return []
 
     @staticmethod
     def _extract_qunar_prices(text: str) -> list:
