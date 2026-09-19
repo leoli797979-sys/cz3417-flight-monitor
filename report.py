@@ -225,7 +225,8 @@ def backfill_times(conn, rows: list) -> None:
 
 
 def latest_round_rows(conn, window_minutes: int = 3,
-                      from_code: str = "", to_code: str = "") -> tuple:
+                      from_code: str = "", to_code: str = "",
+                      max_stale_minutes: int = 90) -> tuple:
     """取指定航向"最近一轮"的记录。
 
     早期实现是"全局最新时间往前 N 分钟的窗口"，但一轮里各平台/航向的抓取时间
@@ -258,6 +259,31 @@ def latest_round_rows(conn, window_minutes: int = 3,
     sql += " ORDER BY price ASC"
     rows = conn.execute(sql, args).fetchall()
     out = [dict(r) for r in rows]
+
+    # 丢掉"明显落后于最新一轮"的平台数据。
+    # 为什么：按 (航向, 平台) 各取最新批次时，被风控挡住的平台会一直用最后一次成功的
+    # 那批数据顶着，而它的价格往往更低，于是页面的"当前价"会显示成几小时前的旧价
+    # （实测 2026-09-19：携程被 Whale Guard 挡住后，仍以旧价 ¥770 压过去哪儿的实时 ¥790）。
+    # 参考点是库里的最新时刻而不是系统当前时间 —— 这样云端多日后重建页面时，
+    # 仍然能如实呈现"最后一次抓到的数据"，而不是因为全部变旧而显示空表。
+    if max_stale_minutes > 0 and mx:
+        try:
+            ref = datetime.strptime(str(mx)[:19], "%Y-%m-%d %H:%M:%S")
+        except Exception:
+            ref = None
+        if ref is not None:
+            fresh = []
+            for r in out:
+                try:
+                    t = datetime.strptime(str(r.get("fetched_at"))[:19],
+                                          "%Y-%m-%d %H:%M:%S")
+                except Exception:
+                    fresh.append(r)
+                    continue
+                if (ref - t).total_seconds() <= max_stale_minutes * 60:
+                    fresh.append(r)
+            out = fresh
+
     backfill_times(conn, out)
     return out, mx
 

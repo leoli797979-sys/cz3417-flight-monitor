@@ -231,7 +231,9 @@ if deploy_dir.exists():
             if tgt.get("price") != f.get("price"):
                 bad.append((fno, f.get("price"), tgt.get("price")))
         check("★ meta 与 latest 的各班次价格一致", not bad, str(bad))
-        check("latest.flights 非空", len(l.get("flights") or []) > 50,
+        # 阈值从 50 降到 15：2026-09-19 起表格只列实际承运航班（此前把代码共享号
+        # 也算成独立航班，虚高一倍多，成都→广州一天真实班次约 40 架）。
+        check("latest.flights 非空", len(l.get("flights") or []) > 15,
               str(len(l.get("flights") or [])))
         for fno, pts in (h.get("series") or {}).items():
             ts = [x["fetched_at"] for x in pts]
